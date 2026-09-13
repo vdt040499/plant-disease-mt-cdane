@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pth
+.DS_Store
+
+# Run artefacts: datasets, caches, checkpoints and result JSON live under
+# UDA_SAVE_DIR and are never committed.
+runs/
+fbr_cache/
+results/
+
+# figures/*.png and figures/*.svg ARE committed: the README references them.

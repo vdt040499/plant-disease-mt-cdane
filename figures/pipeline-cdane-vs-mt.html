@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CDAN+E vs CDAN+E + Mean Teacher</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --color-paper:       #f5f5f5;
+      --color-paper-2:     #ececec;
+      --color-ink:         #2d3142;
+      --color-muted:       #4f5d75;
+      --color-soft:        #7a8399;
+      --color-rule:        rgba(45,49,66,0.12);
+      --color-accent:      #eb6c36;
+      --color-accent-tint: rgba(235,108,54,0.08);
+      --font-sans:  'Geist', 'Be Vietnam Pro', system-ui, sans-serif;
+      --font-serif: 'Instrument Serif', 'Be Vietnam Pro', 'Times New Roman', serif;
+      --font-mono:  'Geist Mono', 'Be Vietnam Pro', ui-monospace, Menlo, monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      min-height: 100vh;
+      padding: 3rem 2rem;
+      color: var(--color-ink);
+    }
+
+    .container { max-width: 1240px; margin: 0 auto; }
+
+    .header { margin-bottom: 3rem; }
+
+    .header-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.75rem, 3vw + 1rem, 2.5rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      line-height: 1.55;
+      color: var(--color-muted);
+      max-width: 62ch;
+    }
+
+    .section { margin-bottom: 3.5rem; }
+
+    .section-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-soft);
+      margin-bottom: 0.5rem;
+    }
+
+    h2 {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.5rem;
+    }
+
+    .formula {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.02em;
+    }
+    .formula .new { color: var(--color-accent); font-weight: 600; }
+
+    .diagram-container { background: transparent; border: none; padding: 0; overflow-x: auto; }
+    svg { width: 100%; min-width: 900px; display: block; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr 0.85fr;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    @media (max-width: 900px) { .cards { grid-template-columns: 1fr; } }
+
+    .card {
+      background: #ffffff;
+      border-radius: 6px;
+      border: 1px solid var(--color-rule);
+      padding: 1.25rem;
+    }
+
+    .card .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-soft);
+      margin-bottom: 0.5rem;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.875rem;
+      padding-bottom: 0.875rem;
+      border-bottom: 1px solid rgba(45,49,66,0.08);
+    }
+
+    .card-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .card-dot.ink   { background: var(--color-ink); }
+    .card-dot.coral { background: var(--color-accent); }
+    .card-dot.muted { background: var(--color-muted); }
+
+    .card h3 { font-size: 0.875rem; font-weight: 600; letter-spacing: -0.005em; }
+
+    .card ul { list-style: none; color: var(--color-muted); font-size: 0.8125rem; line-height: 1.55; }
+    .card li { margin-bottom: 0.35rem; padding-left: 0.875rem; position: relative; }
+    .card li::before { content: '—'; position: absolute; left: 0; color: rgba(45,49,66,0.25); font-size: 0.75rem; }
+    .card code { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-ink); }
+
+    .footer {
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(45,49,66,0.10);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      color: var(--color-soft);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <p class="header-eyebrow">Unsupervised Domain Adaptation · PlantVillage → PlantPathology</p>
+      <h1>CDAN+E and CDAN+E + Mean Teacher</h1>
+      <p class="subtitle">Two training pipelines sharing one seed and one test split. Everything drawn in coral in figure 2 is what Mean Teacher adds; every other element is identical to figure 1.</p>
+    </div>
+
+    <!-- ══════════════ DIAGRAM 1 — CDAN+E ══════════════ -->
+    <div class="section">
+      <p class="section-eyebrow">Figure 1 · Baseline</p>
+      <h2>CDAN+E</h2>
+      <p class="formula">L = L_cls + L_cdan</p>
+
+      <div class="diagram-container">
+        <svg viewBox="0 0 1216 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="cdane-title cdane-desc">
+          <title id="cdane-title">CDAN+E training pipeline</title>
+          <desc id="cdane-desc">Labelled source images and unlabelled target images pass through one shared ResNet-18; the classification branch produces L_cls, while the adversarial branch conditions features on predictions through a multilinear map, reverses the gradient and feeds a discriminator to produce L_cdan.</desc>
+          <defs>
+            <marker id="arrow-1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
+            </marker>
+            <marker id="arrow-accent-1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/>
+            </marker>
+          </defs>
+
+          <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+          <!-- ZONE: nhánh đối kháng (vẽ trước arrows và nodes) -->
+          <rect x="448" y="272" width="584" height="112" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+          <rect x="678" y="276" width="124" height="12" rx="2" fill="#f5f5f5"/>
+          <text x="740" y="285" fill="rgba(45,49,66,0.40)" font-size="7" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle" letter-spacing="0.14em">ADVERSARIAL BRANCH</text>
+
+          <!-- ── ARROWS ── -->
+          <!-- SRC → phi -->
+          <path d="M 168,128 H 192 Q 200,128 200,136 V 212 Q 200,220 208,220 H 248" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-1)"/>
+          <!-- TGT → phi -->
+          <path d="M 168,336 H 208 Q 216,336 216,328 V 252 Q 216,244 224,244 H 248" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-1)"/>
+          <!-- phi → G -->
+          <path d="M 384,220 H 408 Q 416,220 416,212 V 136 Q 416,128 424,128 H 464" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-1)"/>
+          <!-- phi → multilinear map -->
+          <path d="M 384,244 H 424 Q 432,244 432,252 V 328 Q 432,336 440,336 H 464" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-1)"/>
+          <rect x="340" y="284" width="84" height="12" rx="2" fill="#f5f5f5"/>
+          <text x="344" y="293" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">FEAT · GRAD ON</text>
+          <!-- G → multilinear map (predictions, detached) -->
+          <line x1="532" y1="160" x2="532" y2="304" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-1)"/>
+          <rect x="540" y="264" width="96" height="12" rx="2" fill="#f5f5f5"/>
+          <text x="544" y="273" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">PRED · DETACH</text>
+          <!-- G → L_cls -->
+          <line x1="600" y1="128" x2="1080" y2="128" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-1)"/>
+          <rect x="802" y="108" width="76" height="12" rx="2" fill="#f5f5f5"/>
+          <text x="840" y="117" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CE · SOURCE</text>
+          <!-- map → GRL → D → L_cdan -->
+          <line x1="600" y1="336" x2="680" y2="336" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-1)"/>
+          <line x1="800" y1="336" x2="880" y2="336" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-1)"/>
+          <line x1="1016" y1="336" x2="1080" y2="336" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-1)"/>
+          <rect x="1022" y="316" width="52" height="12" rx="2" fill="#f5f5f5"/>
+          <text x="1048" y="325" fill="#eb6c36" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">× W(+E)</text>
+
+          <!-- ── NODES ── -->
+          <!-- SRC -->
+          <rect x="32" y="96" width="136" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="32" y="96" width="136" height="64" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="1"/>
+          <rect x="40" y="102" width="30" height="12" rx="2" fill="transparent" stroke="rgba(122,131,153,0.40)" stroke-width="0.8"/>
+          <text x="55" y="111" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SRC</text>
+          <text x="100" y="134" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Source: PVD + FBR</text>
+          <text x="100" y="149" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">labelled · 64/batch</text>
+
+          <!-- TGT -->
+          <rect x="32" y="304" width="136" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="32" y="304" width="136" height="64" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="1"/>
+          <rect x="40" y="310" width="30" height="12" rx="2" fill="transparent" stroke="rgba(122,131,153,0.40)" stroke-width="0.8"/>
+          <text x="55" y="319" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">TGT</text>
+          <text x="100" y="342" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Target: PPD</text>
+          <text x="100" y="357" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">unlabelled · 64/batch</text>
+
+          <!-- phi -->
+          <rect x="248" y="200" width="136" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="248" y="200" width="136" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+          <rect x="256" y="206" width="30" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+          <text x="271" y="215" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PHI</text>
+          <text x="316" y="238" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">ResNet-18 φ</text>
+          <text x="316" y="253" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">512-d · shared</text>
+
+          <!-- G -->
+          <rect x="464" y="96" width="136" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="464" y="96" width="136" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+          <rect x="472" y="102" width="30" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+          <text x="487" y="111" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CLS</text>
+          <text x="532" y="134" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Classifier G</text>
+          <text x="532" y="149" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">512 → 3 classes</text>
+
+          <!-- multilinear map (FOCAL) -->
+          <rect x="464" y="304" width="136" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="464" y="304" width="136" height="64" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+          <rect x="472" y="310" width="30" height="12" rx="2" fill="transparent" stroke="rgba(235,108,54,0.40)" stroke-width="0.8"/>
+          <text x="487" y="319" fill="#eb6c36" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MAP</text>
+          <text x="532" y="342" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Multilinear map</text>
+          <text x="532" y="357" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">f ⊗ p → 1536-d</text>
+
+          <!-- GRL -->
+          <rect x="680" y="304" width="120" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="680" y="304" width="120" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+          <rect x="688" y="310" width="30" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+          <text x="703" y="319" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">GRL</text>
+          <text x="740" y="342" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Gradient reversal</text>
+          <text x="740" y="357" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">backward × (−λ)</text>
+
+          <!-- D -->
+          <rect x="880" y="304" width="136" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="880" y="304" width="136" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+          <rect x="888" y="310" width="34" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+          <text x="905" y="319" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DISC</text>
+          <text x="948" y="342" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Discriminator D</text>
+          <text x="948" y="357" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">1536→512→256→2</text>
+
+          <!-- L_cls -->
+          <rect x="1080" y="96" width="104" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="1080" y="96" width="104" height="64" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+          <rect x="1088" y="102" width="34" height="12" rx="2" fill="transparent" stroke="rgba(79,93,117,0.40)" stroke-width="0.8"/>
+          <text x="1105" y="111" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">LOSS</text>
+          <text x="1132" y="134" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">L_cls</text>
+          <text x="1132" y="149" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">CE, source</text>
+
+          <!-- L_cdan -->
+          <rect x="1080" y="304" width="104" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="1080" y="304" width="104" height="64" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+          <rect x="1088" y="310" width="34" height="12" rx="2" fill="transparent" stroke="rgba(79,93,117,0.40)" stroke-width="0.8"/>
+          <text x="1105" y="319" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">LOSS</text>
+          <text x="1132" y="342" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">L_cdan</text>
+          <text x="1132" y="357" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">domain CE · +E</text>
+
+          <!-- ── LEGEND ── -->
+          <line x1="32" y1="432" x2="1184" y2="432" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+          <text x="32" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEGEND</text>
+          <rect x="128" y="438" width="20" height="12" rx="2" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="0.8"/>
+          <text x="156" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Input data</text>
+          <rect x="316" y="438" width="20" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="0.8"/>
+          <text x="344" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Parametric module</text>
+          <rect x="552" y="438" width="20" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="0.8"/>
+          <text x="580" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">CDAN+E specific</text>
+          <rect x="792" y="438" width="20" height="12" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="0.8"/>
+          <text x="820" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">Loss</text>
+          <line x1="904" y1="444" x2="924" y2="444" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="932" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Detached · no gradient</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ══════════════ DIAGRAM 2 — CDAN+E + MT ══════════════ -->
+    <div class="section">
+      <p class="section-eyebrow">Figure 2 · Baseline plus Mean Teacher</p>
+      <h2>CDAN+E + Mean Teacher</h2>
+      <p class="formula">L = L_cls + L_cdan <span class="new">+ w(t) · L_cons</span></p>
+
+      <div class="diagram-container">
+        <svg viewBox="0 0 1216 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="cdane-mt-title cdane-mt-desc">
+          <title id="cdane-mt-title">CDAN+E plus Mean Teacher training pipeline</title>
+          <desc id="cdane-mt-desc">The same CDAN+E pipeline, but each target image yields three views: the un-augmented view feeds the adversarial branch unchanged, while two augmented views feed the student and the EMA teacher; the disagreement between their predictions forms L_cons.</desc>
+          <defs>
+            <marker id="arrow-2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
+            </marker>
+            <marker id="arrow-accent-2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/>
+            </marker>
+          </defs>
+
+          <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+          <!-- ── ARROWS ── -->
+          <!-- SRC → phi -->
+          <path d="M 168,120 H 192 Q 200,120 200,128 V 184 Q 200,192 208,192 H 248" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-2)"/>
+          <!-- plain → phi -->
+          <path d="M 168,328 H 176 Q 184,328 184,320 V 216 Q 184,208 192,208 H 248" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-2)"/>
+          <!-- v1 → phi (student) -->
+          <path d="M 168,352 H 208 Q 216,352 216,344 V 232 Q 216,224 224,224 H 248" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-2)"/>
+          <!-- v2 → teacher -->
+          <line x1="168" y1="376" x2="248" y2="376" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-2)"/>
+          <!-- phi → G -->
+          <line x1="384" y1="208" x2="464" y2="208" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-2)"/>
+          <!-- G → khối CDAN -->
+          <line x1="600" y1="208" x2="648" y2="208" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-2)"/>
+          <!-- khối CDAN → L_cdan -->
+          <line x1="880" y1="208" x2="1080" y2="208" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-2)"/>
+          <!-- G → L_cls -->
+          <path d="M 532,176 V 128 Q 532,120 540,120 H 1080" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-2)"/>
+          <rect x="772" y="100" width="76" height="12" rx="2" fill="#f5f5f5"/>
+          <text x="810" y="109" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CE · SOURCE</text>
+          <!-- G (student logits) → L_cons -->
+          <path d="M 532,240 V 360 Q 532,368 540,368 H 1080" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-2)"/>
+          <rect x="756" y="348" width="88" height="12" rx="2" fill="#f5f5f5"/>
+          <text x="800" y="357" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">STUDENT · V1</text>
+          <!-- teacher → L_cons -->
+          <line x1="448" y1="408" x2="1080" y2="408" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#arrow-accent-2)"/>
+          <rect x="756" y="388" width="88" height="12" rx="2" fill="#f5f5f5"/>
+          <text x="800" y="397" fill="#eb6c36" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">TEACHER · V2</text>
+          <!-- EMA: student → teacher -->
+          <line x1="316" y1="240" x2="316" y2="348" stroke="#eb6c36" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow-accent-2)"/>
+          <rect x="324" y="288" width="84" height="12" rx="2" fill="#f5f5f5"/>
+          <text x="328" y="297" fill="#eb6c36" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">EMA α=0.99</text>
+
+          <!-- ── NODES ── -->
+          <!-- SRC -->
+          <rect x="32" y="88" width="136" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="32" y="88" width="136" height="64" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="1"/>
+          <rect x="40" y="94" width="30" height="12" rx="2" fill="transparent" stroke="rgba(122,131,153,0.40)" stroke-width="0.8"/>
+          <text x="55" y="103" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SRC</text>
+          <text x="100" y="126" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Source: PVD + FBR</text>
+          <text x="100" y="141" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">labelled · 64/batch</text>
+
+          <!-- 3-VIEW target -->
+          <rect x="32" y="304" width="136" height="96" rx="6" fill="#f5f5f5"/>
+          <rect x="32" y="304" width="136" height="96" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="1"/>
+          <rect x="40" y="310" width="44" height="12" rx="2" fill="transparent" stroke="rgba(122,131,153,0.40)" stroke-width="0.8"/>
+          <text x="62" y="319" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">3-VIEW</text>
+          <text x="100" y="340" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Target: PPD</text>
+          <text x="100" y="358" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">plain → CDAN+E</text>
+          <text x="100" y="372" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">v1 → student</text>
+          <text x="100" y="386" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">v2 → teacher</text>
+
+          <!-- phi student -->
+          <rect x="248" y="176" width="136" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="248" y="176" width="136" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+          <rect x="256" y="182" width="30" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+          <text x="271" y="191" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PHI</text>
+          <text x="316" y="214" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">ResNet-18 φ</text>
+          <text x="316" y="229" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">student · 512-d</text>
+
+          <!-- G student -->
+          <rect x="464" y="176" width="136" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="464" y="176" width="136" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+          <rect x="472" y="182" width="30" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+          <text x="487" y="191" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CLS</text>
+          <text x="532" y="214" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Classifier G</text>
+          <text x="532" y="229" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">student · 512 → 3</text>
+
+          <!-- khối CDAN gộp -->
+          <rect x="648" y="176" width="232" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="648" y="176" width="232" height="64" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+          <rect x="656" y="182" width="44" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+          <text x="678" y="191" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CDAN+E</text>
+          <text x="764" y="214" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Adversarial branch — unchanged</text>
+          <text x="764" y="229" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">f ⊗ p → GRL → D  (detailed in figure 1)</text>
+
+          <!-- TEACHER (FOCAL, mới) -->
+          <rect x="248" y="348" width="200" height="80" rx="6" fill="#f5f5f5"/>
+          <rect x="248" y="348" width="200" height="80" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+          <rect x="256" y="354" width="30" height="12" rx="2" fill="transparent" stroke="rgba(235,108,54,0.40)" stroke-width="0.8"/>
+          <text x="271" y="363" fill="#eb6c36" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">+MT</text>
+          <text x="348" y="386" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Teacher (EMA)</text>
+          <text x="348" y="402" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">φ_t , G_t · gradients frozen</text>
+          <text x="348" y="416" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">θ_t ← α θ_t + (1−α) θ_s</text>
+
+          <!-- L_cls -->
+          <rect x="1080" y="88" width="104" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="1080" y="88" width="104" height="64" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+          <rect x="1088" y="94" width="34" height="12" rx="2" fill="transparent" stroke="rgba(79,93,117,0.40)" stroke-width="0.8"/>
+          <text x="1105" y="103" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">LOSS</text>
+          <text x="1132" y="126" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">L_cls</text>
+          <text x="1132" y="141" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">CE, source</text>
+
+          <!-- L_cdan -->
+          <rect x="1080" y="176" width="104" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="1080" y="176" width="104" height="64" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+          <rect x="1088" y="182" width="34" height="12" rx="2" fill="transparent" stroke="rgba(79,93,117,0.40)" stroke-width="0.8"/>
+          <text x="1105" y="191" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">LOSS</text>
+          <text x="1132" y="214" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">L_cdan</text>
+          <text x="1132" y="229" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">domain CE · +E</text>
+
+          <!-- L_cons (FOCAL, mới) -->
+          <rect x="1080" y="348" width="104" height="80" rx="6" fill="#f5f5f5"/>
+          <rect x="1080" y="348" width="104" height="80" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+          <rect x="1088" y="354" width="30" height="12" rx="2" fill="transparent" stroke="rgba(235,108,54,0.40)" stroke-width="0.8"/>
+          <text x="1103" y="363" fill="#eb6c36" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">+MT</text>
+          <text x="1132" y="386" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">L_cons</text>
+          <text x="1132" y="402" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">softmax-MSE</text>
+          <text x="1132" y="416" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">× w(t) : 0 → 9</text>
+
+          <!-- ── LEGEND ── -->
+          <line x1="32" y1="472" x2="1184" y2="472" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+          <text x="32" y="488" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEGEND</text>
+          <rect x="128" y="478" width="20" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="0.8"/>
+          <text x="156" y="488" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Unchanged from figure 1</text>
+          <rect x="376" y="478" width="20" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="0.8"/>
+          <text x="404" y="488" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Added by Mean Teacher</text>
+          <line x1="656" y1="484" x2="676" y2="484" stroke="#eb6c36" stroke-width="1.2" stroke-dasharray="5,4"/>
+          <text x="684" y="488" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">EMA update · no backprop</text>
+          <rect x="976" y="478" width="20" height="12" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+          <text x="1004" y="488" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Collapsed block</text>
+        </svg>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <p class="eyebrow">Identical in both figures</p>
+          <div class="card-header"><span class="card-dot ink"></span><h3>Everything except L_cons</h3></div>
+          <ul>
+            <li>Same <code>SEED = 42</code>, same weight initialisation</li>
+            <li>The CDAN+E branch consumes <code>t_plain</code>, the un-augmented target view, exactly as in figure 1</li>
+            <li>Same batch order (<code>seed_loader_epoch(seed, epoch)</code>)</li>
+            <li>Same test split: 40 percent of PPD, fixed by seed</li>
+            <li>Same selection rule: source validation loss, epoch 250 onwards</li>
+          </ul>
+        </div>
+        <div class="card">
+          <p class="eyebrow">Added by Mean Teacher only</p>
+          <div class="card-header"><span class="card-dot coral"></span><h3>What the coral marks</h3></div>
+          <ul>
+            <li>Target dataset returns three views instead of one</li>
+            <li>Teacher is an EMA copy of the student, gradients frozen, kept in <code>.train()</code> so its BatchNorm buffers stay current</li>
+            <li><code>L_cons</code> is the softmax MSE between student(v1) and teacher(v2)</li>
+            <li><code>w(t)</code> ramps late: zero until epoch 100, 9.0 by epoch 150</li>
+            <li>Model selection reads the teacher, not the student</li>
+          </ul>
+        </div>
+        <div class="card">
+          <p class="eyebrow">Result, seed 42</p>
+          <div class="card-header"><span class="card-dot muted"></span><h3>Field test set</h3></div>
+          <ul>
+            <li>CDAN+E: <code>89.74%</code></li>
+            <li>Plus Mean Teacher: <code>95.81%</code></li>
+            <li>Difference: <code>+6.07</code> points</li>
+            <li>n = 1, no error bar</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>PlantVillage (lab) → PlantPathology (field) · ResNet-18 · 300 epoch</span>
+      <span>The ⊗ → GRL → D chain is collapsed in figure 2; figure 1 shows it in full</span>
+    </div>
+
+  </div>
+</body>
+</html>
