@@ -86,7 +86,7 @@
           <rect x="648" y="176" width="232" height="64" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
           <rect x="656" y="182" width="44" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
           <text x="678" y="191" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CDAN+E</text>
-          <text x="764" y="214" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Adversarial branch — unchanged</text>
+          <text x="764" y="214" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Adversarial Branch</text>
           <text x="764" y="229" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">f ⊗ p → GRL → D  (detailed in figure 1)</text>
 
           <!-- TEACHER (FOCAL, mới) -->
