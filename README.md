@@ -31,7 +31,7 @@ from the adaptation split, so no test-set imagery reaches training.
 
 ## Pipeline 1: CDAN+E
 
-CDAN+E pipeline
+![CDAN+E pipeline](figures/pipeline-cdane.png)
 
 Source and target images pass through one shared ResNet-18. The classification
 head produces `L_cls` on labelled source images. The adversarial branch
@@ -42,7 +42,7 @@ domain loss.
 
 ## Pipeline 2: CDAN+E plus Mean Teacher
 
-CDAN+E plus Mean Teacher pipeline
+![CDAN+E plus Mean Teacher pipeline](figures/pipeline-cdane-mt.png)
 
 Each target image now yields three views. The un-augmented view feeds the 
 adversarial branch exactly as before; two independently augmented views feed
