@@ -93,8 +93,8 @@ Seed 42, 300 epochs per pipeline.
 
 | Method                | Field test accuracy |
 | --------------------- | ------------------- |
-| CDAN+E                | 94.08%              |
-| Mean Teacher only     | Not                 |
+| CDAN+E only           | 94.08%              |
+| Mean Teacher only     | 90.03%              |
 | CDAN+E + Mean Teacher | 96.82%              |
 
 
@@ -135,8 +135,7 @@ figures/
   pipeline-mt-only.[png|svg]  Generated
   pipeline-cdane-mt.[png|svg] Generated
 notebooks/
-  Plant_Disease_MT_CDANE.ipynb       Original exploratory notebook (CDAN+E, CDAN+E + MT)
-  Plant_Disease_MT_CDANE_3way.ipynb  Adds Mean Teacher only and the 3-way comparison
+  Plant_Disease_MT_CDANE.ipynb       Original exploratory notebook (CDAN+E, MT, CDAN+E + MT)
 tests/
 ```
 
