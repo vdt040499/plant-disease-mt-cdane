@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 1216 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="mt-only-title mt-only-desc">
+<svg viewBox="0 0 1216 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="mt-only-title mt-only-desc">
           <title id="mt-only-title">Mean Teacher only training pipeline</title>
           <desc id="mt-only-desc">Labelled source images feed the student ResNet-18 and classifier to produce L_cls. Each unlabelled target image yields two augmented views: one feeds the student, the other the EMA teacher, and the disagreement between their predictions forms L_cons. There is no adversarial branch.</desc>
           <defs>
@@ -7,53 +7,95 @@
             <marker id="arrow-mt" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
               <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
             </marker>
+          <marker id="arrow-src-mt" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#2f6fd0"/>
+            </marker>
+            <marker id="arrow-tgt-mt" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#1f9d6b"/>
+            </marker>
+            <marker id="arrow-v1-mt" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#7c4dcc"/>
+            </marker>
+            <marker id="arrow-v2-mt" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#c23b7a"/>
+            </marker>
+            <marker id="grad-mt" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#2d3142"/>
+            </marker>
+            <marker id="sum-mt" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
+            </marker>
           </defs>
 
           <rect width="100%" height="100%" fill="#f5f5f5"/>
 
+          <!-- ── GRADIENT FLOW (backprop) ── -->
+          <line x1="1184" y1="120" x2="1200" y2="120" stroke="#4f5d75" stroke-width="1.2"/>
+          <line x1="1184" y1="388" x2="1200" y2="388" stroke="#4f5d75" stroke-width="1.2"/>
+          <line x1="1200" y1="388" x2="1200" y2="59" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#sum-mt)"/>
+          <circle cx="1200" cy="120" r="2" fill="#4f5d75"/><circle cx="1200" cy="388" r="2" fill="#4f5d75"/>
+          <circle cx="1200" cy="50" r="9" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="1195" y1="50" x2="1205" y2="50" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="1200" y1="45" x2="1200" y2="55" stroke="#2d3142" stroke-width="1.2"/>
+          <text x="1212" y="34" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="end" letter-spacing="0.06em">L_total</text>
+          <path d="M 1191,50 H 316 V 175" fill="none" stroke="#2d3142" stroke-width="1.8" stroke-linejoin="round" marker-end="url(#grad-mt)"/>
+          <rect x="543" y="42" width="434" height="14" rx="2" fill="#f5f5f5"/>
+          <text x="760" y="53" fill="#2d3142" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle" letter-spacing="0.06em">GRADIENT FLOW · ∇ L_total updates φ, G · teacher gets no gradient (EMA only)</text>
+          
+
           <!-- ── ARROWS ── -->
           <!-- SRC → phi -->
-          <path d="M 168,120 H 192 Q 200,120 200,128 V 184 Q 200,192 208,192 H 248" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-mt)"/>
+          <path d="M 168,120 H 192 Q 200,120 200,128 V 184 Q 200,192 208,192 H 248" fill="none" stroke="#2f6fd0" stroke-width="1.2" marker-end="url(#arrow-src-mt)"/>
           <!-- v1 → phi (student) -->
-          <path d="M 168,352 H 208 Q 216,352 216,344 V 232 Q 216,224 224,224 H 248" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-mt)"/>
+          <path d="M 168,352 H 208 Q 216,352 216,344 V 232 Q 216,224 224,224 H 248" fill="none" stroke="#7c4dcc" stroke-width="1.2" marker-end="url(#arrow-v1-mt)"/>
           <!-- v2 → teacher -->
-          <line x1="168" y1="376" x2="248" y2="376" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-mt)"/>
+          <line x1="168" y1="376" x2="248" y2="376" stroke="#c23b7a" stroke-width="1.2" marker-end="url(#arrow-v2-mt)"/>
           <!-- phi → G -->
           <line x1="384" y1="208" x2="464" y2="208" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-mt)"/>
           <!-- G → L_cls -->
-          <path d="M 532,176 V 128 Q 532,120 540,120 H 1080" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-mt)"/>
+          <path d="M 532,176 V 128 Q 532,120 540,120 H 1080" fill="none" stroke="#2f6fd0" stroke-width="1.2" marker-end="url(#arrow-src-mt)"/>
           <rect x="772" y="100" width="76" height="12" rx="2" fill="#f5f5f5"/>
-          <text x="810" y="109" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CE · SOURCE</text>
+          <text x="810" y="109" fill="#2f6fd0" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CE · SOURCE</text>
           <!-- G (student logits) → L_cons -->
-          <path d="M 532,240 V 360 Q 532,368 540,368 H 1080" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-mt)"/>
+          <path d="M 532,240 V 360 Q 532,368 540,368 H 1080" fill="none" stroke="#7c4dcc" stroke-width="1.2" marker-end="url(#arrow-v1-mt)"/>
           <rect x="756" y="348" width="88" height="12" rx="2" fill="#f5f5f5"/>
-          <text x="800" y="357" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">STUDENT · V1</text>
+          <text x="800" y="357" fill="#7c4dcc" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">STUDENT · V1</text>
           <!-- teacher → L_cons -->
-          <line x1="448" y1="408" x2="1080" y2="408" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-mt)"/>
+          <line x1="448" y1="408" x2="1080" y2="408" stroke="#c23b7a" stroke-width="1.2" marker-end="url(#arrow-v2-mt)"/>
           <rect x="756" y="388" width="88" height="12" rx="2" fill="#f5f5f5"/>
-          <text x="800" y="397" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">TEACHER · V2</text>
+          <text x="800" y="397" fill="#c23b7a" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">TEACHER · V2</text>
           <!-- EMA: student → teacher -->
           <line x1="316" y1="240" x2="316" y2="348" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow-mt)"/>
           <rect x="324" y="288" width="84" height="12" rx="2" fill="#f5f5f5"/>
           <text x="328" y="297" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">EMA α=0.99</text>
 
           <!-- ── NODES ── -->
+          <!-- FBR (offline preprocessing) -->
+          <line x1="100" y1="64" x2="100" y2="88" stroke="#2f6fd0" stroke-width="1.2" marker-end="url(#arrow-src-mt)"/>
+          <text x="108" y="79" fill="#2f6fd0" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" letter-spacing="0.06em">LAB IMG</text>
+          <rect x="32" y="8" width="136" height="56" rx="6" fill="#f5f5f5"/>
+          <rect x="32" y="8" width="136" height="56" rx="6" fill="#ffffff" stroke="#2f6fd0" stroke-width="1" stroke-dasharray="4,3"/>
+          <rect x="40" y="14" width="30" height="12" rx="2" fill="transparent" stroke="rgba(47,111,208,0.40)" stroke-width="0.8"/>
+          <text x="55" y="23" fill="#2f6fd0" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PRE</text>
+          <text x="100" y="42" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">FBR</text>
+          <text x="100" y="56" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">SAM mask + field bg</text>
+
           <!-- SRC -->
           <rect x="32" y="88" width="136" height="64" rx="6" fill="#f5f5f5"/>
-          <rect x="32" y="88" width="136" height="64" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="1"/>
-          <rect x="40" y="94" width="30" height="12" rx="2" fill="transparent" stroke="rgba(122,131,153,0.40)" stroke-width="0.8"/>
-          <text x="55" y="103" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SRC</text>
-          <text x="100" y="126" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Source: PVD + FBR</text>
+          <rect x="32" y="88" width="136" height="64" rx="6" fill="rgba(47,111,208,0.08)" stroke="#2f6fd0" stroke-width="1"/>
+          <rect x="40" y="94" width="30" height="12" rx="2" fill="transparent" stroke="rgba(47,111,208,0.40)" stroke-width="0.8"/>
+          <text x="55" y="103" fill="#2f6fd0" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SRC</text>
+          <text x="100" y="126" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Source: FBR images</text>
           <text x="100" y="141" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">labelled</text>
 
           <!-- 2-VIEW target -->
           <rect x="32" y="320" width="136" height="80" rx="6" fill="#f5f5f5"/>
-          <rect x="32" y="320" width="136" height="80" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="1"/>
-          <rect x="40" y="326" width="44" height="12" rx="2" fill="transparent" stroke="rgba(122,131,153,0.40)" stroke-width="0.8"/>
-          <text x="62" y="335" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">2-VIEW</text>
+          <rect x="32" y="320" width="136" height="80" rx="6" fill="rgba(31,157,107,0.08)" stroke="#1f9d6b" stroke-width="1"/>
+          <rect x="40" y="326" width="44" height="12" rx="2" fill="transparent" stroke="rgba(31,157,107,0.40)" stroke-width="0.8"/>
+          <text x="62" y="335" fill="#1f9d6b" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">2-VIEW</text>
           <text x="100" y="356" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Target: PPD</text>
-          <text x="100" y="372" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">v1 → student</text>
-          <text x="100" y="386" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">v2 → teacher</text>
+          <text x="100" y="372" fill="#7c4dcc" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">v1 → student</text>
+          <text x="100" y="386" fill="#c23b7a" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">v2 → teacher</text>
 
           <!-- phi student -->
           <rect x="248" y="176" width="136" height="64" rx="6" fill="#f5f5f5"/>
@@ -100,7 +142,8 @@
           <!-- ── LEGEND ── -->
           <line x1="32" y1="456" x2="1184" y2="456" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
           <text x="32" y="472" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEGEND</text>
-          <rect x="128" y="462" width="20" height="12" rx="2" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="0.8"/>
+          <rect x="128" y="462" width="9" height="12" rx="2" fill="rgba(47,111,208,0.08)" stroke="#2f6fd0" stroke-width="0.8"/>
+          <rect x="139" y="462" width="9" height="12" rx="2" fill="rgba(31,157,107,0.08)" stroke="#1f9d6b" stroke-width="0.8"/>
           <text x="156" y="472" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Input data</text>
           <rect x="316" y="462" width="20" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="0.8"/>
           <text x="344" y="472" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Parametric module</text>
@@ -108,4 +151,17 @@
           <text x="580" y="472" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Loss</text>
           <line x1="664" y1="468" x2="684" y2="468" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4"/>
           <text x="692" y="472" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">EMA update · no backprop</text>
+          <rect x="904" y="462" width="20" height="12" rx="2" fill="#ffffff" stroke="#7a8399" stroke-width="0.8" stroke-dasharray="3,2"/>
+          <text x="932" y="472" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Preprocessing (offline)</text>
+          <text x="32" y="494" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">DATA FLOW</text>
+          <line x1="128" y1="490" x2="148" y2="490" stroke="#2f6fd0" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="156" y="494" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Source: PVD + FBR</text>
+          <line x1="316" y1="490" x2="336" y2="490" stroke="#7c4dcc" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="344" y="494" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Target v1 → student</text>
+          <line x1="492" y1="490" x2="512" y2="490" stroke="#c23b7a" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="520" y="494" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Target v2 → teacher</text>
+          <line x1="668" y1="490" x2="688" y2="490" stroke="#4f5d75" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="696" y="494" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Shared by both domains</text>
+          <line x1="850" y1="490" x2="870" y2="490" stroke="#2d3142" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="878" y="494" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Gradient flow (backprop)</text>
         </svg>
