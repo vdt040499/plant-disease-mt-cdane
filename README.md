@@ -1,12 +1,15 @@
 # Plant Disease Diagnosis Across Domains
 
-Unsupervised domain adaptation from lab leaf images to field images, with a controlled comparison of CDAN+E against CDAN+E plus Mean Teacher. A PlantVillage-trained classifier loses most of its accuracy on PlantPathology, and no field labels exist to fix that directly. This repository implements two training methods for that shift, compared under conditions designed so any gap between them comes from a single loss term.
+Unsupervised domain adaptation from lab leaf images to field images, with a controlled comparison of CDAN+E, Mean Teacher alone, and the two combined. A PlantVillage-trained classifier loses most of its accuracy on PlantPathology, and no field labels exist to fix that directly. This repository implements three training methods for that shift, compared under conditions designed so any gap between them comes from the loss terms that differ. Running each component alone and then together answers whether the combination beats its parts.
 
 
 | Arm                   | Objective                        |
 | --------------------- | -------------------------------- |
-| CDAN+E                | `L_cls + L_cdan`                 |
+| CDAN+E only           | `L_cls + L_cdan`                 |
+| Mean Teacher only     | `L_cls + w(t) * L_cons`          |
 | CDAN+E + Mean Teacher | `L_cls + L_cdan + w(t) * L_cons` |
+
+
 
 
 ## Data
@@ -29,9 +32,9 @@ a patch of a real field image, a step referred to here as FBR
 (field-adaptive background recomposition). Background patches are drawn only
 from the adaptation split, so no test-set imagery reaches training.
 
-## Pipeline 1: CDAN+E
+## Pipeline 1: CDAN+E only
 
-![CDAN+E pipeline](figures/pipeline-cdane.png)
+CDAN+E pipeline
 
 Source and target images pass through one shared ResNet-18. The classification
 head produces `L_cls` on labelled source images. The adversarial branch
@@ -40,9 +43,31 @@ the gradient, and asks a discriminator to tell the domains apart. The `+E` term
 weights each sample by `1 + exp(-H(p))`, so confident predictions dominate the
 domain loss.
 
-## Pipeline 2: CDAN+E plus Mean Teacher
+## Pipeline 2: Mean Teacher only
 
-![CDAN+E plus Mean Teacher pipeline](figures/pipeline-cdane-mt.png)
+CDAN+E pipeline
+
+The same student network, with the adversarial branch removed: no multilinear
+map, no gradient reversal, no discriminator. Labelled source images give `L_cls`.
+Each target image yields two independently augmented views; one feeds the
+student and the other the teacher. The teacher is an exponential moving average
+of the student, and the softmax MSE between their predictions is `L_cons`,
+weighted by `w(t)`.
+
+It shares the seed, the source batch stream, the optimiser, the `w(t)` schedule
+and the teacher-based model selection with the other two arms. Because there is
+no `L_cdan`, the student never sees the un-augmented target view.
+
+This follows the Mean Teacher recipe of Tarvainen and Valpola, as applied to
+plant disease images by Ilsever and Baz (2024), adapted to the domain-adaptation
+setting. It differs from that paper in three ways worth stating: labelled and
+unlabelled images come from different domains, `L_cons` is computed on target
+images only, and the consistency weight ramps late (epoch 100 to 150, final
+value 9) instead of over five epochs.
+
+## Pipeline 3: CDAN+E plus Mean Teacher
+
+CDAN+E plus Mean Teacher pipeline
 
 Each target image now yields three views. The un-augmented view feeds the 
 adversarial branch exactly as before; two independently augmented views feed
@@ -59,15 +84,19 @@ computed under `no_grad`.
 - Model selection reads the teacher, not the student. The teacher is the
 product of the method; selecting on the student discards most of it.
 
+
+
 ## Experimental Results
 
 Seed 42, 300 epochs per pipeline.
 
 
-| Method                                   | Field test accuracy | Change            |
-| ---------------------------------------- | ------------------- | ----------------- |
-| CDAN+E                                   | 89.74%              |                   |
-| CDAN+E + Mean Teacher                    | 95.81%              | +6.07 over CDAN+E |
+| Method                | Field test accuracy |
+| --------------------- | ------------------- |
+| CDAN+E                | 94.08%              |
+| Mean Teacher only     | Not                 |
+| CDAN+E + Mean Teacher | 96.82%              |
+
 
 ## Repository layout
 
@@ -101,13 +130,17 @@ scripts/
   compare.py           Print the comparison table from stored results
   export_figures.py    Regenerate the figures from their HTML source
 figures/
-  pipeline-cdane-vs-mt.html   Source of truth for both diagrams
+  pipeline-cdane-vs-mt.html   Source of truth for all three diagrams
   pipeline-cdane.[png|svg]    Generated
+  pipeline-mt-only.[png|svg]  Generated
   pipeline-cdane-mt.[png|svg] Generated
 notebooks/
-  Plant_Disease_MT_CDANE.ipynb   Original exploratory notebook
+  Plant_Disease_MT_CDANE.ipynb       Original exploratory notebook (CDAN+E, CDAN+E + MT)
+  Plant_Disease_MT_CDANE_3way.ipynb  Adds Mean Teacher only and the 3-way comparison
 tests/
 ```
+
+
 
 ## Reproducing
 
@@ -125,6 +158,9 @@ python scripts/train.py --arm mt
 python scripts/compare.py
 ```
 
+To run the Mean Teacher only arm and the 3-way comparison, use
+`notebooks/Plant_Disease_MT_CDANE.ipynb`
+
 Each arm writes `<UDA_SAVE_DIR>/results/<arm>_s<seed>.json` and skips itself if
 that file exists; pass `--force` to re-run. Checkpoints are written every ten
 epochs and resumed automatically, so an interrupted session can be restarted
@@ -138,9 +174,11 @@ python scripts/train.py --arm mt --epochs 4 --min-select 3 \
     --cons-start 1 --cons-ramp-len 2 --log-every 1 --force
 ```
 
+
+
 ## Figures
 
-`figures/pipeline-cdane-vs-mt.html` is the single source for both diagrams. It
+`figures/pipeline-cdane-vs-mt.html` is the single source for all three diagrams. It
 is a self-contained HTML file: open it in a browser to view, edit the inline
 SVG to change a label or a box, then regenerate the exported files.
 

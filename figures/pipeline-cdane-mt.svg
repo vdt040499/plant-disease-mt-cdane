@@ -127,9 +127,9 @@
           <line x1="32" y1="472" x2="1184" y2="472" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
           <text x="32" y="488" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEGEND</text>
           <rect x="128" y="478" width="20" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="0.8"/>
-          <text x="156" y="488" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Unchanged from figure 1</text>
+          <text x="156" y="488" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Parametric module</text>
           <rect x="376" y="478" width="20" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="0.8"/>
-          <text x="404" y="488" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Added by Mean Teacher</text>
+          <text x="404" y="488" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Mean Teacher</text>
           <line x1="656" y1="484" x2="676" y2="484" stroke="#eb6c36" stroke-width="1.2" stroke-dasharray="5,4"/>
           <text x="684" y="488" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">EMA update · no backprop</text>
           <rect x="976" y="478" width="20" height="12" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
