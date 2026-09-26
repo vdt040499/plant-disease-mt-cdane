@@ -7,12 +7,35 @@
             <marker id="arrow-1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
               <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
             </marker>
-            <marker id="arrow-accent-1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-              <polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/>
+          <marker id="arrow-src-1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#2f6fd0"/>
+            </marker>
+            <marker id="arrow-tgt-1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#1f9d6b"/>
+            </marker>
+            <marker id="grad-1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#2d3142"/>
+            </marker>
+            <marker id="sum-1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
             </marker>
           </defs>
 
           <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+          <!-- ── GRADIENT FLOW (backprop) ── -->
+          <line x1="1184" y1="128" x2="1200" y2="128" stroke="#4f5d75" stroke-width="1.2"/>
+          <line x1="1184" y1="336" x2="1200" y2="336" stroke="#4f5d75" stroke-width="1.2"/>
+          <line x1="1200" y1="336" x2="1200" y2="59" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#sum-1)"/>
+          <circle cx="1200" cy="128" r="2" fill="#4f5d75"/><circle cx="1200" cy="336" r="2" fill="#4f5d75"/>
+          <circle cx="1200" cy="50" r="9" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="1195" y1="50" x2="1205" y2="50" stroke="#2d3142" stroke-width="1.2"/>
+          <line x1="1200" y1="45" x2="1200" y2="55" stroke="#2d3142" stroke-width="1.2"/>
+          <text x="1212" y="34" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="end" letter-spacing="0.06em">L_total</text>
+          <path d="M 1191,50 H 316 V 199" fill="none" stroke="#2d3142" stroke-width="1.8" stroke-linejoin="round" marker-end="url(#grad-1)"/>
+          <rect x="639" y="42" width="242" height="14" rx="2" fill="#f5f5f5"/>
+          <text x="760" y="53" fill="#2d3142" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle" letter-spacing="0.06em">GRADIENT FLOW · ∇ L_total updates φ, G, D</text>
+          
 
           <!-- ZONE: nhánh đối kháng (vẽ trước arrows và nodes) -->
           <rect x="448" y="272" width="584" height="112" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
@@ -21,9 +44,9 @@
 
           <!-- ── ARROWS ── -->
           <!-- SRC → phi -->
-          <path d="M 168,128 H 192 Q 200,128 200,136 V 212 Q 200,220 208,220 H 248" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-1)"/>
+          <path d="M 168,128 H 192 Q 200,128 200,136 V 212 Q 200,220 208,220 H 248" fill="none" stroke="#2f6fd0" stroke-width="1.2" marker-end="url(#arrow-src-1)"/>
           <!-- TGT → phi -->
-          <path d="M 168,336 H 208 Q 216,336 216,328 V 252 Q 216,244 224,244 H 248" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-1)"/>
+          <path d="M 168,336 H 208 Q 216,336 216,328 V 252 Q 216,244 224,244 H 248" fill="none" stroke="#1f9d6b" stroke-width="1.2" marker-end="url(#arrow-tgt-1)"/>
           <!-- phi → G -->
           <path d="M 384,220 H 408 Q 416,220 416,212 V 136 Q 416,128 424,128 H 464" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-1)"/>
           <!-- phi → multilinear map -->
@@ -35,32 +58,42 @@
           <rect x="540" y="264" width="96" height="12" rx="2" fill="#f5f5f5"/>
           <text x="544" y="273" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">PRED · DETACH</text>
           <!-- G → L_cls -->
-          <line x1="600" y1="128" x2="1080" y2="128" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-1)"/>
+          <line x1="600" y1="128" x2="1080" y2="128" stroke="#2f6fd0" stroke-width="1.2" marker-end="url(#arrow-src-1)"/>
           <rect x="802" y="108" width="76" height="12" rx="2" fill="#f5f5f5"/>
-          <text x="840" y="117" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CE · SOURCE</text>
+          <text x="840" y="117" fill="#2f6fd0" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CE · SOURCE</text>
           <!-- map → GRL → D → L_cdan -->
           <line x1="600" y1="336" x2="680" y2="336" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-1)"/>
           <line x1="800" y1="336" x2="880" y2="336" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-1)"/>
           <line x1="1016" y1="336" x2="1080" y2="336" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow-1)"/>
           <rect x="1022" y="316" width="52" height="12" rx="2" fill="#f5f5f5"/>
-          <text x="1048" y="325" fill="#eb6c36" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">× W(+E)</text>
+          <text x="1048" y="325" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">× W(+E)</text>
 
           <!-- ── NODES ── -->
+          <!-- FBR (offline preprocessing) -->
+          <line x1="100" y1="72" x2="100" y2="96" stroke="#2f6fd0" stroke-width="1.2" marker-end="url(#arrow-src-1)"/>
+          <text x="108" y="87" fill="#2f6fd0" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" letter-spacing="0.06em">LAB IMG</text>
+          <rect x="32" y="16" width="136" height="56" rx="6" fill="#f5f5f5"/>
+          <rect x="32" y="16" width="136" height="56" rx="6" fill="#ffffff" stroke="#2f6fd0" stroke-width="1" stroke-dasharray="4,3"/>
+          <rect x="40" y="22" width="30" height="12" rx="2" fill="transparent" stroke="rgba(47,111,208,0.40)" stroke-width="0.8"/>
+          <text x="55" y="31" fill="#2f6fd0" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PRE</text>
+          <text x="100" y="50" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">FBR</text>
+          <text x="100" y="64" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">SAM mask + field bg</text>
+
           <!-- SRC -->
           <rect x="32" y="96" width="136" height="64" rx="6" fill="#f5f5f5"/>
-          <rect x="32" y="96" width="136" height="64" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="1"/>
-          <rect x="40" y="102" width="30" height="12" rx="2" fill="transparent" stroke="rgba(122,131,153,0.40)" stroke-width="0.8"/>
-          <text x="55" y="111" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SRC</text>
-          <text x="100" y="134" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Source: PVD + FBR</text>
-          <text x="100" y="149" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">labelled · 64/batch</text>
+          <rect x="32" y="96" width="136" height="64" rx="6" fill="rgba(47,111,208,0.08)" stroke="#2f6fd0" stroke-width="1"/>
+          <rect x="40" y="102" width="30" height="12" rx="2" fill="transparent" stroke="rgba(47,111,208,0.40)" stroke-width="0.8"/>
+          <text x="55" y="111" fill="#2f6fd0" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SRC</text>
+          <text x="100" y="134" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Source: FBR images</text>
+          <text x="100" y="149" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">labelled</text>
 
           <!-- TGT -->
           <rect x="32" y="304" width="136" height="64" rx="6" fill="#f5f5f5"/>
-          <rect x="32" y="304" width="136" height="64" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="1"/>
-          <rect x="40" y="310" width="30" height="12" rx="2" fill="transparent" stroke="rgba(122,131,153,0.40)" stroke-width="0.8"/>
-          <text x="55" y="319" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">TGT</text>
+          <rect x="32" y="304" width="136" height="64" rx="6" fill="rgba(31,157,107,0.08)" stroke="#1f9d6b" stroke-width="1"/>
+          <rect x="40" y="310" width="30" height="12" rx="2" fill="transparent" stroke="rgba(31,157,107,0.40)" stroke-width="0.8"/>
+          <text x="55" y="319" fill="#1f9d6b" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">TGT</text>
           <text x="100" y="342" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Target: PPD</text>
-          <text x="100" y="357" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">unlabelled · 64/batch</text>
+          <text x="100" y="357" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">unlabelled</text>
 
           <!-- phi -->
           <rect x="248" y="200" width="136" height="64" rx="6" fill="#f5f5f5"/>
@@ -80,9 +113,9 @@
 
           <!-- multilinear map (FOCAL) -->
           <rect x="464" y="304" width="136" height="64" rx="6" fill="#f5f5f5"/>
-          <rect x="464" y="304" width="136" height="64" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
-          <rect x="472" y="310" width="30" height="12" rx="2" fill="transparent" stroke="rgba(235,108,54,0.40)" stroke-width="0.8"/>
-          <text x="487" y="319" fill="#eb6c36" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MAP</text>
+          <rect x="464" y="304" width="136" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+          <rect x="472" y="310" width="30" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+          <text x="487" y="319" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MAP</text>
           <text x="532" y="342" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Multilinear map</text>
           <text x="532" y="357" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">f ⊗ p → 1536-d</text>
 
@@ -91,8 +124,10 @@
           <rect x="680" y="304" width="120" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
           <rect x="688" y="310" width="30" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
           <text x="703" y="319" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">GRL</text>
-          <text x="740" y="342" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Gradient reversal</text>
-          <text x="740" y="357" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">backward × (−λ)</text>
+          <text x="740" y="336" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Be Vietnam Pro', sans-serif" text-anchor="middle">Gradient reversal</text>
+          <text x="740" y="350" fill="#4f5d75" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">fwd: x → x</text>
+          <text x="740" y="362" fill="#2d3142" font-size="9" font-family="'Geist Mono', 'Be Vietnam Pro', monospace" text-anchor="middle">bwd: g → −λ·g</text>
+          <line x1="800" y1="377" x2="680" y2="377" stroke="#2d3142" stroke-width="1.6" marker-end="url(#grad-1)"/>
 
           <!-- D -->
           <rect x="880" y="304" width="136" height="64" rx="6" fill="#f5f5f5"/>
@@ -121,14 +156,24 @@
           <!-- ── LEGEND ── -->
           <line x1="32" y1="432" x2="1184" y2="432" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
           <text x="32" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEGEND</text>
-          <rect x="128" y="438" width="20" height="12" rx="2" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="0.8"/>
+          <rect x="128" y="438" width="9" height="12" rx="2" fill="rgba(47,111,208,0.08)" stroke="#2f6fd0" stroke-width="0.8"/>
+          <rect x="139" y="438" width="9" height="12" rx="2" fill="rgba(31,157,107,0.08)" stroke="#1f9d6b" stroke-width="0.8"/>
           <text x="156" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Input data</text>
           <rect x="316" y="438" width="20" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="0.8"/>
           <text x="344" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Parametric module</text>
-          <rect x="552" y="438" width="20" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="0.8"/>
-          <text x="580" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">CDAN+E specific</text>
-          <rect x="792" y="438" width="20" height="12" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="0.8"/>
-          <text x="820" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">Loss</text>
-          <line x1="904" y1="444" x2="924" y2="444" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3"/>
-          <text x="932" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Detached · no gradient</text>
+          <rect x="552" y="438" width="20" height="12" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="0.8"/>
+          <text x="580" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">Loss</text>
+          <line x1="664" y1="444" x2="684" y2="444" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="692" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Detached · no gradient</text>
+          <rect x="904" y="438" width="20" height="12" rx="2" fill="#ffffff" stroke="#7a8399" stroke-width="0.8" stroke-dasharray="3,2"/>
+          <text x="932" y="448" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Preprocessing (offline)</text>
+          <text x="32" y="470" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">DATA FLOW</text>
+          <line x1="128" y1="466" x2="148" y2="466" stroke="#2f6fd0" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="156" y="470" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Source: PVD + FBR</text>
+          <line x1="316" y1="466" x2="336" y2="466" stroke="#1f9d6b" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="344" y="470" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Target: PPD</text>
+          <line x1="552" y1="466" x2="572" y2="466" stroke="#4f5d75" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="580" y="470" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Shared by both domains</text>
+          <line x1="790" y1="466" x2="810" y2="466" stroke="#2d3142" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="818" y="470" fill="#4f5d75" font-size="8" font-family="'Geist Mono', 'Be Vietnam Pro', monospace">Gradient flow (backprop)</text>
         </svg>
