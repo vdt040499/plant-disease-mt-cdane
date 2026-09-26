@@ -129,6 +129,117 @@ size means single-run differences of a few points can be noise. The paired
 design is stronger evidence than two independent runs, and it is still n = 1.
 Additional seeds are the next step for anyone extending this work.
 
+## Alignment with published baselines
+
+Two papers in `papers/` are referenced for their published numbers. Only one
+of them describes the same experiment as this repository.
+
+### Jeon et al., 2026 (`papers/10_1-s2.0-S1574954125005886-main.pdf`) — comparable
+
+This is the source of FBR and of the 91.1 +/- 4.22% CDAN+E figure quoted
+above. Every training-affecting choice in this repository was checked against
+the paper's Section 3.2-3.3 and Table 1-2:
+
+| Choice | Paper | This repository |
+| --- | --- | --- |
+| Backbone | ResNet-18, ImageNet-pretrained | same |
+| Source domain | PVD, apple, 825 images, 3 classes | same dataset, same classes, same public source |
+| Source split | 75 / 25 train / val, applied after FBR to the entire source set | same |
+| Target/test ratio | PPD, 900 adaptation / 600 test — a 60 / 40 ratio | same ratio (1038 / 692 of 1730 filtered images) |
+| Batch size | 64 | same |
+| Optimizer | AdamW, lr 1e-3 | same |
+| Schedule | CosineAnnealingLR | same |
+| Adversarial run length / selection | 300 epochs, select on lowest val loss from epoch 250 | same |
+| CDAN discriminator | 2 hidden layers, 512 then 256 units | same |
+| Entropy weight (`+E`) | `1 + exp(-H(p))` | same |
+
+Two differences that matter for interpretation:
+
+- **Seeds.** The paper reports mean +/- std over 5 seeds; this repository
+  reports a single seed (42). A standard deviation of 4.22 points on the
+  paper's own runs means a one-seed delta of a few points is not evidence of
+  being better or worse than the paper, only of being consistent or
+  inconsistent with its reported range. Running `--arm cdane` under
+  additional seeds is what would close that gap.
+- **FBR background pool.** The paper draws its 900 target and 600 test images
+  from a much larger PPD pool (~4900 images) and explicitly reserves the
+  *remaining* images — a set disjoint from both target and test — as the
+  source of background patches for FBR ("Section 3.1: *the remaining
+  real-field images from these datasets were used for the proposed
+  background augmentation method*"). This repository has no such third pool:
+  `load_ppd_samples` keeps every single-label PPD image (1730 after
+  filtering), and `split_ppd` divides all of it 60/40 into target and test.
+  The FBR cache then draws its background patches from the target split
+  itself (see the comment "Background images from the TARGET split only" in
+  the FBR pre-compute cell) — the same 1038 images that are later used as
+  the unlabeled domain-alignment/consistency set. The ratio matches the
+  paper; the independence of the background pool from the target pool does
+  not. Each target image is therefore used twice (as a background donor and
+  as an adaptation sample), which the paper's design avoids. This has not
+  been shown to bias the reported numbers, but it is a real deviation from
+  the published protocol, not just a smaller dataset.
+
+### Ilsever and Baz, 2024 (`papers/9_1-s2.0-S2772375524002181-main.pdf`) — not comparable
+
+This paper is sometimes read as "CDAN+E combined with Mean Teacher on
+ResNet-50" because it reports Mean Teacher results with a ResNet-50 backbone.
+It contains no CDAN+E, no domain-adversarial component, no gradient reversal,
+and no cross-domain setting of any kind — that reading is a category error,
+not a nuance. It is a single-domain semi-supervised learning study: a
+fraction of the labels in one dataset (PP2021TS) is withheld, and Mean
+Teacher is asked to recover the gap.
+
+| | Ilsever & Baz | This repository (CDAN+E + MT) |
+| --- | --- | --- |
+| Task | Semi-supervised learning, one domain, partial labels | Unsupervised domain adaptation, two domains, target fully unlabelled |
+| Loss | `L_sup + w(t) * L_unsup` (no domain term) | `L_cls + L_cdan + w(t) * L_cons` |
+| Backbone | ResNet-50 | ResNet-18 |
+| Dataset | PP2021, 6 classes, ~17k images, one photographic domain | PVD (lab) -> PPD (field), 3 classes, ~2300 images total |
+| Labelled / unlabelled split | Same distribution; 5% / 10% / 25% of one training set withheld | Different distributions entirely; target domain never labelled |
+| Batch size / epochs | supervised ablation only: 32 / 90, early stopping. Mean Teacher itself: (10 labelled, 30 unlabelled) per batch, early stopping explicitly turned off | 64 / 300, fixed length, no early stopping |
+
+The loss in this paper is structurally closest to this repository's
+`train_mt_only` ablation (Mean Teacher without CDAN+E), not to the CDAN+E +
+MT arm — and even that comparison would still cross backbone, dataset and
+task boundaries. Its accuracy numbers cannot be placed in the results table
+above; the paper is useful as motivation for using consistency
+regularization under label scarcity, not as a numeric baseline. A numeric
+comparison would require reproducing its exact setting (PP2021, ResNet-50,
+its labelled-fraction protocol) as a separate experiment, not a variant of
+the one in this repository.
+
+**How the "25% / 10% / 5% / All" labelled fraction actually works (Section
+3.1.2, Appendix A.2).** There is one training set, PP2021TS (15,546 images).
+"All" means every image keeps its label — the fully-supervised reference.
+"25%" means a stratified sample of 25% of that *same* training set keeps its
+label; the remaining 75% is not discarded, it stays in training as the
+unlabelled pool for `L_unsup` (confirmed by their own numbers: the "10%"
+setting reports 13,992 unlabelled images, which is exactly the other 90% of
+the 15,546-image training set). Labelled and unlabelled samples are drawn
+from the *same* dataset and the *same* photographic domain — the split
+simulates annotation scarcity, not a domain gap. This has no analogue on the
+PVD side of this repository: PVD is 100% labelled by construction, and
+"how much of PPD becomes FBR background vs. adaptation target" (previous
+subsection) is an image-compositing decision, not a labelled-fraction split.
+Point for point, this paper's protocol answers "how much labelled data does
+Mean Teacher save you within one domain"; this repository's protocol answers
+"does adding Mean Teacher on top of CDAN+E help once you already have zero
+target labels and a domain gap." Different questions, not comparable numbers.
+
+**On early stopping for the adversarial arms.** Both papers converge on the
+same practical finding from different directions: Jeon et al. deliberately
+fix adversarial training (CDAN+E, DANN) to 300 epochs with no early stopping,
+because adversarial loss is not monotonic and a patience-based stop would
+trigger on minimax noise rather than convergence (Section 3.2). Ilsever and
+Baz reach the same conclusion for a different reason — they turn early
+stopping off specifically for Mean Teacher because "the validation loss
+increases in the first 5 epochs due to unsupervised weight ramp-up." Neither
+paper uses early stopping on the method this repository's Pipeline 2 is
+built from (CDAN+E) or resembles (Mean Teacher); a training-speed comparison
+that adds early stopping to the CDAN+E + MT arm would not be reproducing
+either paper's practice, and risks stopping on a spurious dip rather than
+genuine convergence.
+
 ## Repository layout
 
 ```
@@ -229,3 +340,12 @@ treat the old one as public.
 - Tarvainen and Valpola. Mean teachers are better role models. NIPS 2017.
 - Laine and Aila. Temporal Ensembling for Semi-Supervised Learning. ICLR 2017.
 - Kirillov et al. Segment Anything. ICCV 2023.
+- Jeon et al. Bridging the Lab-to-Field gap in plant disease diagnosis through
+  unsupervised domain adaptation enhanced by background recomposition.
+  Ecological Informatics 93 (2026) 103579. Source of FBR and of the CDAN+E
+  baseline this repository's Pipeline 1 is checked against.
+- Ilsever and Baz. Consistency regularization based semi-supervised plant
+  disease recognition. Smart Agricultural Technology 9 (2024) 100613.
+  Single-domain Mean Teacher study, ResNet-50, no domain adaptation; see
+  "Alignment with published baselines" for why its numbers are not a
+  baseline for Pipeline 2.
