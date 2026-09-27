@@ -88,14 +88,22 @@ product of the method; selecting on the student discards most of it.
 
 ## Experimental Results
 
-Seed 42, 300 epochs per pipeline.
+Seed 42, 300 epochs per pipeline. Rows below the first three keep the
+CDAN+E + Mean Teacher method fixed and change exactly one factor (backbone or
+SAM checkpoint) from that baseline configuration.
 
 
-| Method                | Field test accuracy |
-| --------------------- | ------------------- |
-| CDAN+E only           | 94.08%              |
-| Mean Teacher only     | 90.03%              |
-| CDAN+E + Mean Teacher | 96.82%              |
+| Method                | Crop / Classes                | Backbone  | SAM Model | Field test accuracy |
+| --------------------- | ------------------------------ | --------- | --------- | ------------------- |
+| CDAN+E only           | Apple (Scab, Rust, Healthy)    | ResNet-18 | ViT-B     | 89.74%              |
+| CDAN+E only           | Apple (Scab, Rust, Healthy)    | ResNet-18 | ViT-H     | 94.08%              |
+| Mean Teacher only     | Apple (Scab, Rust, Healthy)    | ResNet-18 | ViT-B     | TBD                 |
+| Mean Teacher only     | Apple (Scab, Rust, Healthy)    | ResNet-18 | ViT-H     | 90.03%              |
+| CDAN+E + Mean Teacher | Apple (Scab, Rust, Healthy)    | ResNet-18 | ViT-B     | 95.81               |
+| CDAN+E + Mean Teacher | Apple (Scab, Rust, Healthy)    | ResNet-18 | ViT-H     | 96.82%              |
+| CDAN+E + Mean Teacher | Apple (Scab, Rust, Healthy)    | ResNet-50 | ViT-H     | 97.64               |
+
+
 
 
 ## Alignment with published baselines
@@ -109,44 +117,48 @@ This is the source of FBR and of the 91.1 +/- 4.22% CDAN+E figure quoted
 above. Every training-affecting choice in this repository was checked against
 the paper's Section 3.2-3.3 and Table 1-2:
 
-| Choice | Paper | This repository |
-| --- | --- | --- |
-| Backbone | ResNet-18, ImageNet-pretrained | same |
-| Source domain | PVD, apple, 825 images, 3 classes | same dataset, same classes, same public source |
-| Source split | 75 / 25 train / val, applied after FBR to the entire source set | same |
-| Target/test ratio | PPD, 900 adaptation / 600 test — a 60 / 40 ratio | same ratio (1038 / 692 of 1730 filtered images) |
-| Batch size | 64 | same |
-| Optimizer | AdamW, lr 1e-3 | same |
-| Schedule | CosineAnnealingLR | same |
-| Adversarial run length / selection | 300 epochs, select on lowest val loss from epoch 250 | same |
-| CDAN discriminator | 2 hidden layers, 512 then 256 units | same |
-| Entropy weight (`+E`) | `1 + exp(-H(p))` | same |
+
+| Choice                             | Paper                                                           | This repository                                 |
+| ---------------------------------- | --------------------------------------------------------------- | ----------------------------------------------- |
+| Backbone                           | ResNet-18, ImageNet-pretrained                                  | same                                            |
+| Source domain                      | PVD, apple, 825 images, 3 classes                               | same dataset, same classes, same public source  |
+| Source split                       | 75 / 25 train / val, applied after FBR to the entire source set | same                                            |
+| Target/test ratio                  | PPD, 900 adaptation / 600 test — a 60 / 40 ratio                | same ratio (1038 / 692 of 1730 filtered images) |
+| Batch size                         | 64                                                              | same                                            |
+| Optimizer                          | AdamW, lr 1e-3                                                  | same                                            |
+| Schedule                           | CosineAnnealingLR                                               | same                                            |
+| Adversarial run length / selection | 300 epochs, select on lowest val loss from epoch 250            | same                                            |
+| CDAN discriminator                 | 2 hidden layers, 512 then 256 units                             | same                                            |
+| Entropy weight (`+E`)              | `1 + exp(-H(p))`                                                | same                                            |
+
 
 Two differences that matter for interpretation:
 
 - **Seeds.** The paper reports mean +/- std over 5 seeds; this repository
-  reports a single seed (42). A standard deviation of 4.22 points on the
-  paper's own runs means a one-seed delta of a few points is not evidence of
-  being better or worse than the paper, only of being consistent or
-  inconsistent with its reported range. Running `--arm cdane` under
-  additional seeds is what would close that gap.
+reports a single seed (42). A standard deviation of 4.22 points on the
+paper's own runs means a one-seed delta of a few points is not evidence of
+being better or worse than the paper, only of being consistent or
+inconsistent with its reported range. Running `--arm cdane` under
+additional seeds is what would close that gap.
 - **FBR background pool.** The paper draws its 900 target and 600 test images
-  from a much larger PPD pool (~4900 images) and explicitly reserves the
-  *remaining* images — a set disjoint from both target and test — as the
-  source of background patches for FBR ("Section 3.1: *the remaining
-  real-field images from these datasets were used for the proposed
-  background augmentation method*"). This repository has no such third pool:
-  `load_ppd_samples` keeps every single-label PPD image (1730 after
-  filtering), and `split_ppd` divides all of it 60/40 into target and test.
-  The FBR cache then draws its background patches from the target split
-  itself (see the comment "Background images from the TARGET split only" in
-  the FBR pre-compute cell) — the same 1038 images that are later used as
-  the unlabeled domain-alignment/consistency set. The ratio matches the
-  paper; the independence of the background pool from the target pool does
-  not. Each target image is therefore used twice (as a background donor and
-  as an adaptation sample), which the paper's design avoids. This has not
-  been shown to bias the reported numbers, but it is a real deviation from
-  the published protocol, not just a smaller dataset.
+from a much larger PPD pool (~4900 images) and explicitly reserves the
+*remaining* images — a set disjoint from both target and test — as the
+source of background patches for FBR ("Section 3.1: *the remaining
+real-field images from these datasets were used for the proposed
+background augmentation method*"). This repository has no such third pool:
+`load_ppd_samples` keeps every single-label PPD image (1730 after
+filtering), and `split_ppd` divides all of it 60/40 into target and test.
+The FBR cache then draws its background patches from the target split
+itself (see the comment "Background images from the TARGET split only" in
+the FBR pre-compute cell) — the same 1038 images that are later used as
+the unlabeled domain-alignment/consistency set. The ratio matches the
+paper; the independence of the background pool from the target pool does
+not. Each target image is therefore used twice (as a background donor and
+as an adaptation sample), which the paper's design avoids. This has not
+been shown to bias the reported numbers, but it is a real deviation from
+the published protocol, not just a smaller dataset.
+
+
 
 ### Ilsever and Baz, 2024 (`papers/9_1-s2.0-S2772375524002181-main.pdf`) — not comparable
 
@@ -158,14 +170,16 @@ not a nuance. It is a single-domain semi-supervised learning study: a
 fraction of the labels in one dataset (PP2021TS) is withheld, and Mean
 Teacher is asked to recover the gap.
 
-| | Ilsever & Baz | This repository (CDAN+E + MT) |
-| --- | --- | --- |
-| Task | Semi-supervised learning, one domain, partial labels | Unsupervised domain adaptation, two domains, target fully unlabelled |
-| Loss | `L_sup + w(t) * L_unsup` (no domain term) | `L_cls + L_cdan + w(t) * L_cons` |
-| Backbone | ResNet-50 | ResNet-18 |
-| Dataset | PP2021, 6 classes, ~17k images, one photographic domain | PVD (lab) -> PPD (field), 3 classes, ~2300 images total |
-| Labelled / unlabelled split | Same distribution; 5% / 10% / 25% of one training set withheld | Different distributions entirely; target domain never labelled |
-| Batch size / epochs | supervised ablation only: 32 / 90, early stopping. Mean Teacher itself: (10 labelled, 30 unlabelled) per batch, early stopping explicitly turned off | 64 / 300, fixed length, no early stopping |
+
+|                             | Ilsever & Baz                                                                                                                                        | This repository (CDAN+E + MT)                                        |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Task                        | Semi-supervised learning, one domain, partial labels                                                                                                 | Unsupervised domain adaptation, two domains, target fully unlabelled |
+| Loss                        | `L_sup + w(t) * L_unsup` (no domain term)                                                                                                            | `L_cls + L_cdan + w(t) * L_cons`                                     |
+| Backbone                    | ResNet-50                                                                                                                                            | ResNet-18                                                            |
+| Dataset                     | PP2021, 6 classes, ~17k images, one photographic domain                                                                                              | PVD (lab) -> PPD (field), 3 classes, ~2300 images total              |
+| Labelled / unlabelled split | Same distribution; 5% / 10% / 25% of one training set withheld                                                                                       | Different distributions entirely; target domain never labelled       |
+| Batch size / epochs         | supervised ablation only: 32 / 90, early stopping. Mean Teacher itself: (10 labelled, 30 unlabelled) per batch, early stopping explicitly turned off | 64 / 300, fixed length, no early stopping                            |
+
 
 The loss in this paper is structurally closest to this repository's
 `train_mt_only` ablation (Mean Teacher without CDAN+E), not to the CDAN+E +
@@ -318,11 +332,12 @@ treat the old one as public.
 - Laine and Aila. Temporal Ensembling for Semi-Supervised Learning. ICLR 2017.
 - Kirillov et al. Segment Anything. ICCV 2023.
 - Jeon et al. Bridging the Lab-to-Field gap in plant disease diagnosis through
-  unsupervised domain adaptation enhanced by background recomposition.
-  Ecological Informatics 93 (2026) 103579. Source of FBR and of the CDAN+E
-  baseline this repository's Pipeline 1 is checked against.
+unsupervised domain adaptation enhanced by background recomposition.
+Ecological Informatics 93 (2026) 103579. Source of FBR and of the CDAN+E
+baseline this repository's Pipeline 1 is checked against.
 - Ilsever and Baz. Consistency regularization based semi-supervised plant
-  disease recognition. Smart Agricultural Technology 9 (2024) 100613.
-  Single-domain Mean Teacher study, ResNet-50, no domain adaptation; see
-  "Alignment with published baselines" for why its numbers are not a
-  baseline for Pipeline 2.
+disease recognition. Smart Agricultural Technology 9 (2024) 100613.
+Single-domain Mean Teacher study, ResNet-50, no domain adaptation; see
+"Alignment with published baselines" for why its numbers are not a
+baseline for Pipeline 2.
+
