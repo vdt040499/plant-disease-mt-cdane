@@ -12,3 +12,6 @@ fbr_cache/
 results/
 
 # figures/*.png and figures/*.svg ARE committed: the README references them.
+
+CLAUDE.md
+docs/routes
