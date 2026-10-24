@@ -2,8 +2,8 @@
 
 Unsupervised domain adaptation (UDA) from lab leaf images to field images. A classifier trained on PlantVillage loses most of
 its accuracy on field photographs, and no field labels exist to fix that directly. This repository studies three
-components for that shift (field-adaptive background recomposition, CDAN+E, Mean Teacher) and, through **three experiments**
-(A, B, C), compares them against each other and against published results.
+components for that shift (field-adaptive background recomposition, CDAN+E, Mean Teacher) and, through **four experiments**
+(A–D), compares them against each other and against published results.
 
 | Arm                   | Objective                        |
 | --------------------- | -------------------------------- |
@@ -15,23 +15,26 @@ components for that shift (field-adaptive background recomposition, CDAN+E, Mean
 
 | | Domain pair | Protocol | Backbone | Compared with | Notebook |
 | --- | --- | --- | --- | --- | --- |
-| **A** | PlantVillage apple → Plant Pathology 2020 | held-out test split (692 images) | ResNet-18 (ResNet-50 ablation) | Jeon et al. 2026 | [`A_apple_heldout.ipynb`](notebooks/A_apple_heldout.ipynb) |
-| **B** | same | transductive: adapt on and evaluate all 1730 images | ResNet-50 | Wu et al. 2023 (MSUN) | [`B_apple_transductive.ipynb`](notebooks/B_apple_transductive.ipynb) |
-| **C** | PlantVillage potato → PlantDoc potato | held-out test split (106 images) | ResNet-18 | Mahapatra et al. 2026 | [`C_potato_plantdoc.ipynb`](notebooks/C_potato_plantdoc.ipynb) |
+| **A** | PlantVillage apple → Plant Pathology 2020 | held-out test split (692 images) | ResNet-18 (ResNet-50 ablation) | [Jeon et al. 2026](https://www.sciencedirect.com/science/article/pii/S1574954125005886) | [`A_apple_heldout.ipynb`](notebooks/A_apple_heldout.ipynb) |
+| **B** | same | transductive: adapt on and evaluate all 1730 images | ResNet-50 | [Wu et al. 2023 (MSUN)](https://doi.org/10.34133/plantphenomics.0038) | [`B_apple_transductive.ipynb`](notebooks/B_apple_transductive.ipynb) |
+| **C** | PlantVillage potato → PlantDoc potato | held-out test split (106 images) | ResNet-18 | [Mahapatra et al. 2026](<papers/5_Advancing plant disease classification using an attention-based CNN for intra-dataset and cross-dataset training.pdf>) | [`C_potato_plantdoc.ipynb`](notebooks/C_potato_plantdoc.ipynb) |
+| **D** | PlantVillage apple → Plant Pathology 2020 | as B, but the source is **all** 2550 PlantVillage apple images (CBPUDA's split) | ResNet-50 | [Huang and Tsai 2023 (CBPUDA)](https://arxiv.org/abs/2308.07017v1), **withdrawn preprint** — reference only | [`D_apple_cbpuda.ipynb`](notebooks/D_apple_cbpuda.ipynb) |
 
 [`Experiments_Summary.ipynb`](notebooks/Experiments_Summary.ipynb) rebuilds the two result tables below and the charts (no training).
 The notebooks share one structure and one training setup (see "Reproducing").
 
 ## Data
 
-| | A | B | C |
-| --- | --- | --- | --- |
-| Source (labelled, lab) | PlantVillage apple, 875 images (300 / 275 / 300) → 656 train / 219 val after FBR | same | PlantVillage potato early + late blight, 600 images (300 / class) → 450 train / 150 val |
-| Target (unlabelled, field) | Plant Pathology 2020, 1038 images (60% of the 1730 single-label images) | all 1730 images | PlantDoc potato, 106 images (50% of 212 after MD5 deduplication) |
-| Evaluation | 692 held-out images (40%), never used for training, model selection or FBR backgrounds | the same 1730 target images (labels used only to score) | 106 held-out images (50%, stratified) |
-| Classes | healthy, rust, scab | same | early blight, late blight |
+| | A | B | C | D |
+| --- | --- | --- | --- | --- |
+| Source (labelled, lab) | PlantVillage apple, 875 images (300 / 275 / 300) → 656 train / 219 val after FBR | same | PlantVillage potato early + late blight, 600 images (300 / class) → 450 train / 150 val | PlantVillage apple, **all 2550 images (1645 / 275 / 630)**, all used for training; no held-out val |
+| Target (unlabelled, field) | Plant Pathology 2020, 1038 images (60% of the 1730 single-label images) | all 1730 images | PlantDoc potato, 106 images (50% of 212 after MD5 deduplication) | all 1730 images |
+| Evaluation | 692 held-out images (40%), never used for training, model selection or FBR backgrounds | the same 1730 target images (labels used only to score) | 106 held-out images (50%, stratified) | same as B |
+| Classes | healthy, rust, scab | same | early blight, late blight | healthy, rust, scab |
 
-The source domain is capped at 300 images per class (apple rust has only 275). Plant Pathology rows labelled
+In A, B and C the source domain is capped at 300 images per class (apple rust has only 275), which also keeps the classes
+roughly balanced. D removes the cap to match CBPUDA's split, so its source is 64.5% healthy and 10.8% rust while the target
+is 29.8% healthy and 36.0% rust (see Table 1 and "D" under "Alignment with published baselines"). Plant Pathology rows labelled
 `multiple_diseases` are dropped (91 of 1821) because PlantVillage has no matching class.
 
 Source images are not used raw. Each is segmented with SAM and composited onto a patch of a real field image, a step referred
@@ -113,9 +116,11 @@ Each row differs from the one it is compared with by exactly one component, so t
 | B | CDAN+E | ✓ | ✓ | – | ResNet-50 | ViT-H ‡ | 92.95 | |
 | B | CDAN+E + MT | ✓ | ✓ | ✓ | ResNet-50 | ViT-H ‡ | **98.50** | + MT: **+5.55** |
 | C | CDAN+E + MT | ✓ | ✓ | ✓ | ResNet-18 | ViT-H | **66.98** | |
+| D | CDAN+E + MT, all 2550 source images | ✓ | ✓ | ✓ | ResNet-50 | ViT-H ** | 77.86 | vs B (balanced 875-image source): **−20.64** †† |
 
 **Not run yet** (these would complete the ablation): FBR alone (`src_fbr`) and CDAN+E without FBR (`cdane_raw`) in A, B and C; MT only
-with a confirmed SAM in A; every other arm in C. Without them, the contribution of FBR itself is not measured.
+with a confirmed SAM in A; every other arm in C; in D, the CDAN+E arm and a class-balanced sampler over the 2550 images (which would
+separate "more source images" from "imbalanced source"). Without them, the contribution of FBR itself is not measured.
 
 **Reading the table**
 
@@ -124,12 +129,19 @@ with a confirmed SAM in A; every other arm in C. Without them, the contribution 
   `L_cons`; the effect is smaller when the SAM masks are better (ViT-H), i.e. the less adapted the starting point, the more Mean Teacher adds.
 - **Better SAM masks help more than a bigger backbone.** ViT-H over ViT-B: +4.34 (CDAN+E), +1.01 (CDAN+E + MT); ResNet-50 over ResNet-18: +0.72.
 - **The first two rows (A) bracket the whole effect**: 60.40 without adaptation → 89.74 with FBR + CDAN+E → 95.81 with Mean Teacher added.
+- **The pipeline is sensitive to the source class balance (D).** With the uncapped source, the model predicts 51 / 18 / 31% healthy / rust / scab on
+  a target that is 30 / 36 / 34%, and rust recall falls to 48.71% (healthy 99.42, scab 89.70). The bias is already there at epoch 10, before
+  `w(t)` leaves zero, so it comes from the classifier and CDAN+E. Mean Teacher then locks it in: `L_cons` falls to 0.002 as the student agrees
+  with a biased teacher. CDAN aligns conditional feature distributions and implicitly assumes the two domains share class proportions, so this
+  is the expected failure under label shift. The 300-per-class cap in A and B is therefore load-bearing, not only a match to Jeon et al.
 - Every result is a single seed. Jeon et al. report ±4.22 for CDAN+E over five seeds, so differences of a few points are not yet evidence.
 
 † Hard-coded constant (`acc_on_B`) from an earlier full run; its configuration was not recorded. ‡ SAM model as recorded in the earlier notes; B used the
 `fbr_h_cache` FBR cache, which by its name holds ViT-H masks. § Recorded in the earlier README; not present in the saved notebook outputs. ‖ README
 earlier listed 90.03 for "MT only, ViT-H", but 90.03 is the **student** accuracy of this same run (teacher 91.04). ¶ Saved output 97.54; the earlier README
-said 97.64.
+said 97.64. \*\* Notebook default (`SAM_MODEL_TYPE = 'vit_h'`, own cache `fbr_h_cache_cbp_full`); not recorded in the pasted output. †† Not a
+single-component Δ: besides the source set, D selects the model on the training images themselves (CBPUDA has no validation set) and uses its own
+freshly built FBR cache. The class-balanced run listed below would isolate the source effect.
 
 ### Table 2 — Comparison across experiments and with the published results
 
@@ -138,6 +150,7 @@ said 97.64.
 | **A** | apple, held-out 692 | ResNet-18 | CDAN+E **89.74 / 94.08**; CDAN+E + MT **95.81 / 96.82** (ViT-B / ViT-H) | Jeon et al.: CDAN+E w/ FBR **91.1 ± 4.22**, baseline 47.1 ± 6.54, Real-to-Real 97.7 ± 0.77 | **Yes, closest.** Same protocol, backbone and hyper-parameters; compare CDAN+E only (Jeon has no MT). 1 seed vs 5; 875 vs 825 source images; FBR backgrounds taken from the target itself |
 | **B** | apple, transductive 1730 | ResNet-50 | CDAN+E **92.95**; CDAN+E + MT **98.50** | MSUN (Wu et al.): **72.31**, DANN 50.04, baseline 39.27 | **Partly.** Same domain pair, protocol and backbone, but MSUN uses no FBR, so the gap mixes FBR with the method |
 | **C** | potato → PlantDoc, held-out 106 | ResNet-18 | CDAN+E + MT **66.98** (early 64.29, late 70.00, mean 67.14) | Mahapatra et al., no adaptation: early 94.87, late 10.48 (mean 52.68 \*) | **Loosely.** Different backbone, input size and adaptation; only one arm run |
+| **D** | apple, transductive 1730 | ResNet-50 | compared number: B's balanced-source CDAN+E + MT **98.50**; uncapped 2550-image source: 77.86 | CBPUDA (Huang and Tsai): **94.79**, BCDM 59.65 | **Reference only.** The preprint is withdrawn and unreviewed; our compared run uses 875 balanced source images, not CBPUDA's 2550 |
 
 \* Computed here; the paper reports per-class accuracy only.
 
@@ -155,14 +168,17 @@ said 97.64.
 - **A/B vs C:** the pipeline reaches the 90s on Plant Pathology but 67% on PlantDoc potato. PlantDoc is a much harder domain; the two are not comparable numbers.
 - **Class balance:** in B every class is above 91%, whereas every method in MSUN's Table 6 scores scab highest and leaves rust or healthy low; in C the
   published model collapses to one class (94.87 / 10.48) while this pipeline is balanced (64.29 / 70.00).
+- **B vs D (same target and protocol, different source):** capping the source at 300 per class gives 98.50; using every PlantVillage apple image gives
+  77.86, almost entirely through rust (99.84 → 48.71). More source images did not help because they came with a label shift.
 - **Not yet supported:** attributing the gap to MSUN or Mahapatra's models to CDAN+E or Mean Teacher rather than FBR, which needs the missing `cdane_raw` and `src_raw` rows.
 
 
 ## Alignment with published baselines
 
-Three papers are compared against. Jeon et al. describes the same experiment as A; Wu et al. (MSUN) runs the same domain pair under a different,
-transductive protocol (B); Mahapatra et al. supplies a source-only number for the potato pair (C). Ilsever and Baz (2024) is cited only as the source
-of the Mean Teacher recipe used in Pipeline 2; it is a single-domain semi-supervised study and none of its numbers are compared.
+Three peer-reviewed papers are compared against. Jeon et al. describes the same experiment as A; Wu et al. (MSUN) runs the same domain pair under a different,
+transductive protocol (B); Mahapatra et al. supplies a source-only number for the potato pair (C). A fourth, Huang and Tsai (CBPUDA), is a withdrawn
+preprint and is listed for reference only (D). Ilsever and Baz (2024) is cited only as the source of the Mean Teacher recipe used in Pipeline 2; it is a
+single-domain semi-supervised study and none of its numbers are compared.
 
 ### A — Jeon et al., 2026 (`papers/10_1-s2.0-S1574954125005886-main.pdf`) — comparable
 
@@ -294,6 +310,56 @@ this repository uses the 50% split so no evaluated image is ever trained on.
 - **PlantDoc is much harder than Plant-Pathology.** Internet images, several leaves per image, cluttered backgrounds; models trained on PlantVillage alone score roughly
 30–60% on PlantDoc in the papers cited here (e.g. 30.78% for MSUN's 27-class baseline). Accuracy in the 60s here is not directly comparable to the 90s on the apple pair.
 
+### D — Huang and Tsai, 2023 (CBPUDA), withdrawn preprint — reference only
+
+Huang and Tsai. *Contrastive Bi-Projector for Unsupervised Domain Adaption.* arXiv:2308.07017. Version 1 (14 Aug 2023) reports PV → PP on the same
+three apple classes in Table IV. Version 2 (30 Dec 2023) **withdraws the paper**: *"Professor asks to withdraw this paper on arxiv. This paper will
+upload again if the paper is published in the journal."* No journal version was found. The paper is unreviewed, publishes no code, and its numbers
+are cited here from v1 for reference only. They should not be presented as a peer-reviewed baseline.
+
+| Choice          | CBPUDA (§IV-A, IV-B)                                   | B (compared run)                          | D (CBPUDA's split)                         |
+| --------------- | ------------------------------------------------------ | ----------------------------------------- | ------------------------------------------ |
+| Source domain   | all PV apple, 1645 / 275 / 630 (healthy / rust / scab) | 875 images, 300 / 275 / 300, through FBR  | all 2550 images, through FBR               |
+| Target domain   | PP2020 without `multiple_diseases`: 516 / 622 / 592    | same 1730 images                          | same                                       |
+| Evaluation set  | the target itself (transductive)                       | same                                      | same                                       |
+| Backbone        | ResNet-50, ImageNet-pretrained                         | same                                      | same                                       |
+| Optimisation    | SGD, lr 1e-4 backbone / 5e-3 heads, batch 36, 10 000 iterations | AdamW, cosine, batch 64, 300 epochs | same as B                          |
+| Model selection | not stated                                             | source val loss from epoch 250            | loss on the training images from epoch 250 |
+
+| Method                                      | Healthy | Rust  | Scab  | Mean of 3 | Accuracy |
+| ------------------------------------------- | ------- | ----- | ----- | --------- | -------- |
+| ResNet-50 (w/o DA) — CBPUDA Table IV \*     | 11.02   | 24.10 | 79.54 | 38.22     | 39.27    |
+| DANN — CBPUDA Table IV \*                   | 28.71   | 30.26 | 85.12 | 48.03     | 50.04    |
+| MRAN — CBPUDA Table IV \*                   | 70.87   | 52.57 | 81.28 | 68.24     | 67.45    |
+| BCDM — CBPUDA Table IV                      | 97.09   | 1.93  | 88.51 | 62.51     | 59.65    |
+| CBPUDA — CBPUDA Table IV                    | 94.96   | 92.92 | 96.79 | 94.89     | 94.79    |
+| **CDAN+E + MT (ours, B, balanced source)**  | 97.48   | 99.84 | 97.97 | 98.43     | **98.50** |
+| CDAN+E + MT (ours, D, all 2550 source)      | 99.42   | 48.71 | 89.70 | 79.28     | 77.86    |
+
+\* Identical, number for number, to MSUN's Table 6 (see B), so these rows were most likely copied from MSUN rather than re-run on CBPUDA's split. Only
+BCDM and CBPUDA are the preprint's own runs. Table IV orders its columns healthy / rust / scab, the reverse of MSUN; the values themselves agree.
+
+**Why the compared row is B, not D.** Under CBPUDA's uncapped split the source is 64.5% healthy and 10.8% rust, against 29.8% and 36.0% in the target.
+This pipeline's linear classifier and CDAN+E absorb that prior, and Mean Teacher reinforces it (Table 1, "Reading the table"). BCDM, one of the
+preprint's own runs on the same split, collapses the same way (rust 1.93%), so the label shift is a property of the split, not only of this pipeline.
+B keeps every other choice of the protocol (target, transductive evaluation, backbone) and differs only in using the class-balanced 875-image source.
+The comparison is therefore "this pipeline on a balanced source" against "CBPUDA on the full source", and has to be stated that way.
+
+Things to state alongside the numbers:
+
+- **The preprint is withdrawn.** Nothing in it has been reviewed, and the authors withdrew it themselves.
+- **The source sets differ** (875 balanced vs 2550 imbalanced), for the reason above. A class-balanced sampler over all 2550 images would put both
+  sides on the same source images; it has not been run.
+- **CBPUDA's "AVG" matches neither definition.** From its per-class values, the mean of three classes is 94.89 and the accuracy over 516 / 622 / 592
+  images is 94.85, while the table gives 94.79 (BCDM: 62.51 / 59.94 vs 59.65). Rounding to 0.01 cannot explain the gap. The same check reproduces both
+  of this repository's rows exactly (98.50, 77.86).
+- **CBPUDA uses no FBR, and its model selection is not described.** The gap mixes FBR with the method, as in B.
+- **One seed** on our side, as everywhere else.
+
+Possible reason CBPUDA is less affected by the imbalance, if its number is genuine: it classifies by distance to class prototypes on the unit
+hypersphere, which has no bias term in which to store the source prior, and it has no self-training step that could lock in a biased teacher. This is a
+hypothesis; the preprint does not test it.
+
 ## Repository layout
 
 ```
@@ -334,13 +400,14 @@ notebooks/             Colab notebooks that produced the results above (outputs 
   A_apple_heldout.ipynb        Experiment A: all three arms, the SAM / backbone ablation, comparison with Jeon et al.
   B_apple_transductive.ipynb   Experiment B: transductive protocol, comparison with MSUN
   C_potato_plantdoc.ipynb      Experiment C: potato, comparison with Mahapatra et al.
+  D_apple_cbpuda.ipynb         Experiment D: B with the uncapped 2550-image source (CBPUDA's split)
   Experiments_Summary.ipynb    The two result tables and charts, no training
 tests/
 ```
 
 ## Reproducing
 
-### The three experiments (Colab, GPU)
+### The four experiments (Colab, GPU)
 
 Open the notebook in Colab, set `SAVE_DIR` in section 2 to a folder on your Drive, and run the cells top to bottom. All three notebooks share the same structure
 (§2 configuration → §3 data → §4 SAM + FBR → loaders → models → training → results) and the same training set-up: AdamW lr 1e-3, weight decay 0.01, cosine schedule,
@@ -355,6 +422,7 @@ ramped to `C²` over 50 epochs. In section 2, `SAM_MODEL_TYPE` (`'vit_b'` | `'vi
 | A: CDAN+E + MT, ResNet-50 (97.54) | same | `vit_h` | 5.7 (`run_mt_resnet50`) after the cells above |
 | B: CDAN+E 92.95, CDAN+E + MT 98.50 | `B_apple_transductive.ipynb` | `vit_h`, ResNet-50 (set in `MSUN_RUNS`) | all definition cells, then §5.8 |
 | C: CDAN+E + MT 66.98 | `C_potato_plantdoc.ipynb` | `vit_h`, `RUN_ARMS = ['cdane_mt']` | through §7, then §8 |
+| D: CDAN+E + MT 77.86 | `D_apple_cbpuda.ipynb` | `vit_h`, `CBP_TRAIN_ON_ALL_SOURCE = True`, ResNet-50 (set in `CBP_RUNS`) | all definition cells, then §5.8 (first run builds a separate FBR cache for 2550 images) |
 
 Notes. (1) The FBR caches already on Drive are reused, so SAM is not re-run; if a cache is missing it is rebuilt with the same fixed seed. (2) Each run writes a JSON
 result and checkpoints every ten epochs and resumes after a Colab disconnect; delete the JSON to force a fresh run. (3) The Kaggle token for Plant Pathology is read from
@@ -419,10 +487,13 @@ Colab Secrets; if a token was ever pasted into a notebook cell, rotate it and tr
 - Laine and Aila. Temporal Ensembling for Semi-Supervised Learning. ICLR 2017.
 - Kirillov et al. Segment Anything. ICCV 2023.
 - Jeon et al. Bridging the Lab-to-Field gap in plant disease diagnosis through unsupervised domain adaptation enhanced by background recomposition.
-Ecological Informatics 93 (2026) 103579. Source of FBR and of the CDAN+E baseline experiment A is compared with.
-- Wu et al. From Laboratory to Field: Unsupervised Domain Adaptation for Plant Disease Recognition in the Wild. Plant Phenomics 5 (2023) 0038. Source of the MSUN / DANN /
+Ecological Informatics 93 (2026) 103579. [Link](https://www.sciencedirect.com/science/article/pii/S1574954125005886) · [local PDF](papers/10_1-s2.0-S1574954125005886-main.pdf). Source of FBR and of the CDAN+E baseline experiment A is compared with.
+- Wu et al. From Laboratory to Field: Unsupervised Domain Adaptation for Plant Disease Recognition in the Wild. Plant Phenomics 5 (2023) 0038. [DOI](https://doi.org/10.34133/plantphenomics.0038). Source of the MSUN / DANN /
 baseline numbers experiment B is compared with.
 - Mahapatra, Panda, Dash and Sahu. Advancing plant disease classification using an attention-based CNN for intra-dataset and cross-dataset training. Scientific Reports 16 (2026)
-10925. Source of the PlantVillage → PlantDoc potato source-only figures experiment C is compared with.
-- Ilsever and Baz. Consistency regularization based semi-supervised plant disease recognition. Smart Agricultural Technology 9 (2024) 100613. Source of the Mean Teacher recipe
+10925. [Local PDF](<papers/5_Advancing plant disease classification using an attention-based CNN for intra-dataset and cross-dataset training.pdf>). Source of the PlantVillage → PlantDoc potato source-only figures experiment C is compared with.
+- Ilsever and Baz. Consistency regularization based semi-supervised plant disease recognition. Smart Agricultural Technology 9 (2024) 100613. [Link](https://www.sciencedirect.com/science/article/pii/S2772375524002181) · [local PDF](papers/9_1-s2.0-S2772375524002181-main.pdf). Source of the Mean Teacher recipe
 adapted in Pipeline 2 (single-domain study; its numbers are not used).
+- Huang and Tsai. Contrastive Bi-Projector for Unsupervised Domain Adaption. arXiv:2308.07017v1 (2023), **withdrawn** in v2. [v1](https://arxiv.org/abs/2308.07017v1).
+Source of the CBPUDA / BCDM figures and the uncapped source split used in experiment D; reference only.
+- Zhao, Des Combes, Zhang and Gordon. On Learning Invariant Representations for Domain Adaptation. ICML 2019. Why aligning feature distributions fails under label shift (D).
