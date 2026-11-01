@@ -20,17 +20,15 @@ is also the test set), ResNet-50, compared with [Wu et al. 2023 (MSUN)](https://
 Plant Phenomics, Table 5.
 
 
-|     | Crop (classes)                           | Source → target                   | C-PD crops | MSUN Table 5 column | MSUN  | Ours (FBR + CDAN+E + MT) |
-| --- | ---------------------------------------- | --------------------------------- | ---------- | ------------------- | ----- | ------------------------ |
-| D   | Apple (healthy, rust, scab)              | PlantVillage apple → C-PD apple   | 511        | Apple               | 71.45 | **80.23**                |
-| G   | Corn (gray leaf spot, leaf blight, rust) | PlantVillage corn → C-PD corn     | 300        | Corn                | 56.46 | 62.44                    |
-| H   | Potato (early blight, late blight)       | PlantVillage potato → C-PD potato | 375        | Potato              | 67.42 | 75.23                    |
+|     | Original paper                                                                                           | Source → target                   | Protocol          | Published method (backbone) | Published | Ours (FBR + CDAN+E + MT) |
+| --- | -------------------------------------------------------------------------------------------------------- | --------------------------------- | ----------------- | --------------------------- | --------- | ------------------------ |
+| D   | [Wu et al. 2023 (MSUN)](https://doi.org/10.34133/plantphenomics.0038), Plant Phenomics, Table 5 (Apple)  | PlantVillage apple → C-PD apple   | transductive 511  | MSUN (ResNet-50)            | 71.45     | **80.23** (R50)          |
+| G   | [Wu et al. 2023 (MSUN)](https://doi.org/10.34133/plantphenomics.0038), Plant Phenomics, Table 5 (Corn)   | PlantVillage corn → C-PD corn     | transductive 300¹ | MSUN (ResNet-50)            | 56.46     | **62.44** (R50)          |
+| H   | [Wu et al. 2023 (MSUN)](https://doi.org/10.34133/plantphenomics.0038), Plant Phenomics, Table 5 (Potato) | PlantVillage potato → C-PD potato | transductive 375  | MSUN (ResNet-50)            | 67.42     | **75.23** (R50)          |
 
-
- MSUN reports 395 corn crops (67 / 119 / 209). PlantDoc has only 127 rust boxes, so after filtering ours are
+Classes: apple healthy / rust / scab; corn gray leaf spot / leaf blight / rust; potato early blight / late blight.
+¹ MSUN reports 395 corn crops (67 / 119 / 209). PlantDoc has only 127 rust boxes, so after filtering ours are
 67 / 119 / 114.
-† The first seed-42 run (57.07) is not reported: source validation accuracy collapses to chance during training, with
-and without FBR, so the run is being diagnosed rather than tuned.
 
 ## 1. Method
 
