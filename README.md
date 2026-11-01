@@ -2,18 +2,35 @@
 
 Unsupervised domain adaptation (UDA) from lab leaf images (PlantVillage) to field images, where no field labels exist. The
 pipeline combines field-adaptive background recomposition (**FBR**), conditional adversarial adaptation (**CDAN+E**) and
-**Mean Teacher** (MT), and is evaluated on four benchmarks (A–D), each under the protocol of a published study.
+**Mean Teacher** (MT), and is evaluated on six benchmarks (A–D, G, H), each under the protocol of a published study.
 
 **Main results** (seed 42, accuracy %, FBR + CDAN+E + MT):
 
 
-|     | Original paper                                                                                                  | Source → target                            | Protocol          | Published method (backbone)  | Published   | Ours (FBR + CDAN+E + MT)          |
-| --- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ----------------- | ---------------------------- | ----------- | --------------------------------- |
-| A   | [Jeon et al. 2026](https://www.sciencedirect.com/science/article/pii/S1574954125005886), Ecol. Inform., Table 2 | PlantVillage apple → Plant Pathology 2020  | held-out 692      | CDAN+E w/ FBR (ResNet-18)    | 91.1 ± 4.22 | **96.82** (R18) / **97.54** (R50) |
-| B   | [Wu et al. 2023 (MSUN)](https://doi.org/10.34133/plantphenomics.0038), Plant Phenomics, Table 6                 | PlantVillage apple → Plant Pathology 2020  | transductive 1730 | MSUN (ResNet-50)             | 72.31       | **98.50** (R50)                   |
-| C   | [Huang and Tsai 2023 (CBPUDA)](https://arxiv.org/abs/2308.07017v1), arXiv, Table IV                             | PlantVillage apple → Plant Pathology 2020  | transductive 1730 | CBPUDA (ResNet-50)           | 94.79       | 98.50 (R50)                       |
-| D   | [Wu et al. 2023 (MSUN)](https://doi.org/10.34133/plantphenomics.0038), Plant Phenomics, Table 5 (Apple)         | PlantVillage apple → PlantDoc apple (C-PD) | transductive 511  | MSUN, apple-only (ResNet-50) | 71.45       | **80.23** (R50)                   |
+|     | Original paper                                                                                                  | Source → target                           | Protocol          | Published method (backbone) | Published   | Ours (FBR + CDAN+E + MT)          |
+| --- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ----------------- | --------------------------- | ----------- | --------------------------------- |
+| A   | [Jeon et al. 2026](https://www.sciencedirect.com/science/article/pii/S1574954125005886), Ecol. Inform., Table 2 | PlantVillage apple → Plant Pathology 2020 | held-out 692      | CDAN+E w/ FBR (ResNet-18)   | 91.1 ± 4.22 | **96.82** (R18) / **97.54** (R50) |
+| B   | [Wu et al. 2023 (MSUN)](https://doi.org/10.34133/plantphenomics.0038), Plant Phenomics, Table 6                 | PlantVillage apple → Plant Pathology 2020 | transductive 1730 | MSUN (ResNet-50)            | 72.31       | **98.50** (R50)                   |
+| C   | [Huang and Tsai 2023 (CBPUDA)](https://arxiv.org/abs/2308.07017v1), arXiv, Table IV                             | PlantVillage apple → Plant Pathology 2020 | transductive 1730 | CBPUDA (ResNet-50)          | 94.79       | 98.50 (R50)                       |
 
+
+**PlantDoc benchmarks** (seed 42, accuracy %). D, G and H share one setup: PlantVillage images of one crop as
+source, that crop's PlantDoc bounding boxes cropped and hand-filtered into C-PD as target (transductive: the target
+is also the test set), ResNet-50, compared with [Wu et al. 2023 (MSUN)](https://doi.org/10.34133/plantphenomics.0038),
+Plant Phenomics, Table 5.
+
+
+|     | Crop (classes)                           | Source → target                   | C-PD crops | MSUN Table 5 column | MSUN  | Ours (FBR + CDAN+E + MT) |
+| --- | ---------------------------------------- | --------------------------------- | ---------- | ------------------- | ----- | ------------------------ |
+| D   | Apple (healthy, rust, scab)              | PlantVillage apple → C-PD apple   | 511        | Apple               | 71.45 | **80.23**                |
+| G   | Corn (gray leaf spot, leaf blight, rust) | PlantVillage corn → C-PD corn     | 300        | Corn                | 56.46 | 62.44                    |
+| H   | Potato (early blight, late blight)       | PlantVillage potato → C-PD potato | 375        | Potato              | 67.42 | 75.23                    |
+
+
+ MSUN reports 395 corn crops (67 / 119 / 209). PlantDoc has only 127 rust boxes, so after filtering ours are
+67 / 119 / 114.
+† The first seed-42 run (57.07) is not reported: source validation accuracy collapses to chance during training, with
+and without FBR, so the run is being diagnosed rather than tuned.
 
 ## 1. Method
 
@@ -36,8 +53,6 @@ MSE, weighted by `w(t)`. In Pipeline 3 a third, un-augmented view feeds the adve
 Baz (2024), with consistency on target images only and a late ramp (epoch 100 → 150, final weight 9).
 - Load-bearing details: EMA updates parameters only and the teacher stays in `.train()` so its BatchNorm buffers update;
 model selection reads the teacher, not the student.
-
-
 
 ## 2. Experimental setup
 
@@ -63,8 +78,6 @@ MT: EMA 0.99, sigmoid ramp-up. SAM ViT-B or ViT-H. Seed 42. Paired arms share th
 stream (checked by `scripts/rng_probe.py`), so a difference between them is attributable to the loss term that differs.
 
 ## 3. Results
-
-
 
 ### 3.1 Comparison with published methods
 
@@ -104,8 +117,6 @@ use raw PlantVillage images; ours use FBR. Per-class order healthy / rust / scab
 | D      | CDAN+E + MT (ours)                         | 74.06 / 91.30 / 79.85 | **80.23** |
 
 
-
-
 ### 3.2 Ablation
 
 **Table 4.** Each Δ changes exactly one component between runs that share backbone and SAM model.
@@ -132,8 +143,6 @@ use raw PlantVillage images; ours use FBR. Per-class order healthy / rust / scab
 - **Mask quality matters more than backbone size**: ViT-H over ViT-B gives up to +4.34, ResNet-50 over ResNet-18 +0.72.
 - **Not run yet**: `src_fbr` and `cdane_raw` (A, B), MT only with a confirmed SAM (A), the other arms in D, a CDAN+E arm and a
 class-balanced sampler in C. FBR's contribution is therefore only known from Jeon et al. (+2.7 for CDAN+E).
-
-
 
 ## 4. Discussion
 
@@ -209,8 +218,6 @@ run, so it is the same 3-class task as D. MSUN's apple source is 46% healthy, ou
 - **C — CBPUDA (reference only).** arXiv:2308.07017 v1 was withdrawn by its authors in v2 and never published. Its baseline,
 DANN and MRAN rows are identical to MSUN's Table 6, and its "AVG" matches neither the class mean nor the accuracy computed
 from its per-class values.
-
-
 
 ## References
 
