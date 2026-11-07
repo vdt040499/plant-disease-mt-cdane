@@ -2,33 +2,34 @@
 
 Unsupervised domain adaptation (UDA) from lab leaf images (PlantVillage) to field images, where no field labels exist. The
 pipeline combines field-adaptive background recomposition (**FBR**), conditional adversarial adaptation (**CDAN+E**) and
-**Mean Teacher** (MT), and is evaluated on six benchmarks (A–D, G, H), each under the protocol of a published study.
+**Mean Teacher** (MT), and is evaluated on four benchmarks (A–D), each under the protocol of a published study.
 
-**Main results** (seed 42, accuracy %, FBR + CDAN+E + MT):
-
-
-|     | Original paper                                                                                                  | Source → target                           | Protocol          | Published method (backbone) | Published   | Ours (FBR + CDAN+E + MT)          |
-| --- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ----------------- | --------------------------- | ----------- | --------------------------------- |
-| A   | [Jeon et al. 2026](https://www.sciencedirect.com/science/article/pii/S1574954125005886), Ecol. Inform., Table 2 | PlantVillage apple → Plant Pathology 2020 | held-out 692      | CDAN+E w/ FBR (ResNet-18)   | 91.1 ± 4.22 | **96.82** (R18) / **97.54** (R50) |
-| B   | [Wu et al. 2023 (MSUN)](https://doi.org/10.34133/plantphenomics.0038), Plant Phenomics, Table 6                 | PlantVillage apple → Plant Pathology 2020 | transductive 1730 | MSUN (ResNet-50)            | 72.31       | **98.50** (R50)                   |
-| C   | [Huang and Tsai 2023 (CBPUDA)](https://arxiv.org/abs/2308.07017v1), arXiv, Table IV                             | PlantVillage apple → Plant Pathology 2020 | transductive 1730 | CBPUDA (ResNet-50)          | 94.79       | 98.50 (R50)                       |
+**Main results** (seed 42, accuracy %):
 
 
-**PlantDoc benchmarks** (seed 42, accuracy %). D, G and H share one setup: PlantVillage images of one crop as
-source, that crop's PlantDoc bounding boxes cropped and hand-filtered into C-PD as target (transductive: the target
-is also the test set), ResNet-50, compared with [Wu et al. 2023 (MSUN)](https://doi.org/10.34133/plantphenomics.0038),
-Plant Phenomics, Table 5.
+|      | Original paper                                                                                                  | Source → target                           | Protocol                                | Method (backbone)                       | Accuracy                                                   |
+| ---- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | --------------------------------------- | --------------------------------------- | ---------------------------------------------------------- |
+| Ours | This work                                                                                                       | PlantVillage apple → Plant Pathology 2020 | A: held-out 692; B, C: transductive 1730 | FBR + CDAN+E + MT (ResNet-18 / ResNet-50) | A: **96.82** (R18) / **97.54** (R50); B, C: **98.50** (R50) |
+| C    | [Huang and Tsai 2023 (CBPUDA)](https://arxiv.org/abs/2308.07017v1), arXiv, Table IV                             | PlantVillage apple → Plant Pathology 2020 | transductive 1730                       | CBPUDA (ResNet-50)                      | 94.79                                                      |
+| A    | [Jeon et al. 2026](https://www.sciencedirect.com/science/article/pii/S1574954125005886), Ecol. Inform., Table 2 | PlantVillage apple → Plant Pathology 2020 | held-out 692                            | CDAN+E w/ FBR (ResNet-18)               | 91.1 ± 4.22                                                |
+| B    | [Wu et al. 2023 (MSUN)](https://doi.org/10.34133/plantphenomics.0038), Plant Phenomics, Table 6                 | PlantVillage apple → Plant Pathology 2020 | transductive 1730                       | MSUN (ResNet-50)                        | 72.31                                                      |
 
 
-|     | Original paper                                                                                           | Source → target                   | Protocol          | Published method (backbone) | Published | Ours (FBR + CDAN+E + MT) |
-| --- | -------------------------------------------------------------------------------------------------------- | --------------------------------- | ----------------- | --------------------------- | --------- | ------------------------ |
-| D   | [Wu et al. 2023 (MSUN)](https://doi.org/10.34133/plantphenomics.0038), Plant Phenomics, Table 5 (Apple)  | PlantVillage apple → C-PD apple   | transductive 511  | MSUN (ResNet-50)            | 71.45     | **80.23** (R50)          |
-| G   | [Wu et al. 2023 (MSUN)](https://doi.org/10.34133/plantphenomics.0038), Plant Phenomics, Table 5 (Corn)   | PlantVillage corn → C-PD corn     | transductive 300¹ | MSUN (ResNet-50)            | 56.46     | **62.44** (R50)          |
-| H   | [Wu et al. 2023 (MSUN)](https://doi.org/10.34133/plantphenomics.0038), Plant Phenomics, Table 5 (Potato) | PlantVillage potato → C-PD potato | transductive 375  | MSUN (ResNet-50)            | 67.42     | **75.23** (R50)          |
+**PlantDoc benchmark** (accuracy %). D uses PlantVillage apple as source and the apple bounding boxes of PlantDoc,
+cropped and hand-filtered into C-PD, as target (transductive: the target is also the test set), ResNet-50.
+Sapkota et al., Zubair et al. and Liu and Zhang use a different protocol (supervised training on PlantDoc labels), so their numbers are reference points, not
+like-for-like comparisons.
 
-Classes: apple healthy / rust / scab; corn gray leaf spot / leaf blight / rust; potato early blight / late blight.
-¹ MSUN reports 395 corn crops (67 / 119 / 209). PlantDoc has only 127 rust boxes, so after filtering ours are
-67 / 119 / 114.
+
+| Bench | Method                                                                                                   | Setting                                                                     | Per class (H / R / S)                     | Apple accuracy             |
+| ----- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------- | -------------------------- |
+| D     | **CDAN+E + MT (ours)**                                                                                   | UDA, PlantVillage apple → C-PD apple, 511 crops, transductive, ResNet-50    | 74.06 / 91.30 / 79.85                     | **80.23**                  |
+| D     | [Zubair et al.](https://doi.org/10.3390/agriengineering7050159), ensemble InceptionResNetV2 + MobileNetV2 + EfficientNetB3 (AgriEngineering 2025, Table 9) | Supervised on PlantDoc (27-way), PlantDoc test split; per-class recall | 88.89 / 50.00 / 100.00 (support 9 / 10 / 10) | 79.3 (23 of 29, derived)   |
+| D     | [Liu and Zhang](https://doi.org/10.32604/cmc.2024.058640), Efficient Swin Transformer (CMC 2025, Table 1, classes 0–2) | Supervised on PlantDoc (27-way); per-class recall; class-index → apple mapping inferred from alphabetical order and supports | 77.77 / 70.00 / 90.00 (support 9 / 10 / 10) | 79.3 (23 of 29, derived)   |
+| D     | [Sapkota et al.](https://arxiv.org/abs/2608.24934), Gemma 4 E4B + ConvNeXt-Tiny (arXiv 2026, Table 5)   | Supervised on PlantDoc (27-way), MLLM zero-shot on CNN top-3, PlantDoc test split | 78 / 60 / 90 (support 9 / 10 / 10)       | 75.9 (22 of 29, derived)   |
+| D     | [MSUN](https://doi.org/10.34133/plantphenomics.0038) (Wu et al. 2023, Plant Phenomics, Table 5, Apple)   | Same as ours                                                                | n/a                                       | 71.45                      |
+
+Classes: apple healthy (H) / rust (R) / scab (S).
 
 ## 1. Method
 
@@ -40,7 +41,7 @@ Classes: apple healthy / rust / scab; corn gray leaf spot / leaf blight / rust; 
 | CDAN+E + Mean Teacher | `L_cls + L_cdan + w(t) * L_cons` | [Pipeline 3](figures/pipeline-cdane-mt.png) |
 
 
-![CDAN+E plus Mean Teacher pipeline](figures/pipeline-cdane-mt.png)
+![FBR plus CDAN+E plus Mean Teacher pipeline](figures/pipeline-fbr-cdane-mt.png)
 
 - **FBR** (before training, cached): each source leaf is segmented with SAM and alpha-composited onto a random patch of an
 unlabelled target image.
